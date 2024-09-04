@@ -12,6 +12,7 @@ fnupdate () {
 #	fi
 	echo '------checking differrences in '$2' between the branches '$1'and '$currentbranch'-------------'
 	git diff --name-status $1 $1_$currentbranch 
+	git diff -U 3 x1 merge_y1
 	echo '------end of deifferrences in '$2'  between the branches '$1'and '$currentbranch'-------------'
 	sync
 	sync
@@ -59,5 +60,5 @@ do
 	fi
 done
 cd /TopStor
-git show | grep commit
+echo Please note that nothing was committed. so you must systempush the new branch name after you review the merge status
 echo finished
