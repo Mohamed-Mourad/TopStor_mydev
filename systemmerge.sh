@@ -31,6 +31,7 @@ if [ $? -eq 0 ];
 then
 	branch=`git branch | grep '*' | awk '{print $2}'`
 fi
+/TopStor/systempull.sh $branch
 /TopStor/systempull.sh $currentbranch
 flag=1
 while [ $flag -ne 0 ];
