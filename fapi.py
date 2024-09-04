@@ -4,6 +4,7 @@ from getversions import getversions
 from functools import wraps
 from copy import deepcopy
 from flask import request, jsonify, render_template, redirect, url_for, g, send_file
+import re, ipaddress
 import Hostsconfig
 from Hostconfig import config
 from allphysicalinfo import getall 
@@ -51,11 +52,18 @@ for log in logcatalog:
  logdict[msgcode] = log.replace(msgcode+':','').split(' ')
 allinfo = 0
 
+def is_valid_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
 
 
 def getalltime(renew='no'):
  global allinfo,alldsks, getalltimestamp, leaderip
- if (getalltimestamp+30) < timestamp() or renew == 'yes':
+ #if (getalltimestamp+30) < timestamp() or renew == 'yes':
+ if (getalltimestamp+1) < timestamp() or renew == 'yes':
   alldsks = deepcopy(get('host','current'))
   allinfo = deepcopy(getall(leaderip, alldsks))
   getalltimestamp = timestamp()
@@ -196,6 +204,8 @@ def setversion(data):
 @app.route('/api/v1/software/versions', methods=['GET','POST'])
 @login_required
 def versions(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  return getversions()
 
 #@app.route('/api/v1/hosts/info', methods=['GET','POST'])
@@ -208,6 +218,8 @@ def hostsinfo():
 @login_required
 def hostsallinfo(data):
  global allhosts, readyhosts, activehosts, losthosts, possiblehosts
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  hostsinfo()
  hostslost()  
  hostspossible()
@@ -244,6 +256,8 @@ def hostsactive():
 @app.route('/api/v1/hosts/discover', methods=['GET','POST'])
 @login_required
 def discover(data):
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     cmndstring = '/TopStor/getdiscovery.sh '
     postchange(cmndstring)
     return data 
@@ -278,6 +292,8 @@ def hostslost():
 @login_required
 def dgsinfo(data):
  global allinfo 
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  getalltime()
  dgsinfo = {'raids':allinfo['raids'], 'pools':allinfo['pools'], 'disks':allinfo['disks']}
  dgsinfo['newraid'] = newraids(allinfo['disks'])
@@ -410,6 +426,8 @@ def dgsnewpool(data):
 @login_required
 def volumestats(data):
  global allinfo 
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  getalltime()
  volstats = allvolstats(leaderip, deepcopy(allinfo))
  return jsonify(volstats)
@@ -418,6 +436,8 @@ def volumestats(data):
 @login_required
 def volumeslist(data):
  global allinfo 
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  getalltime()
  volumes = []
  vid = 0
@@ -432,6 +452,8 @@ def volumeslist(data):
 @login_required
 def volpoolsinfo(data):
  global allpools
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  allpools = getpools()
  return jsonify({'results':allpools})
 
@@ -446,6 +468,8 @@ def dskperfs():
 @login_required
 def volumessnapshotsinfo(data):
  global allvolumes, alldsks, allinfo
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  snaplist = {'Once':[], 'Minutely': [], 'Hourly': [], 'Weekly':[], '-':[]}
  periodlist = {'Minutely': [], 'Hourly': [], 'Weekly':[], 'Trend': []}
  getalltime()
@@ -466,6 +490,8 @@ def volumessnapshotsinfo(data):
 
 def volumesinfo(prot='all'):
  global allvolumes, alldsks, allinfo
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  getalltime()
  allgroups = getgroups()
  volgrouplist = []
@@ -499,30 +525,40 @@ def volumesinfo(prot='all'):
 @app.route('/api/v1/volumes/CIFS/volumesinfo', methods=['GET','POST'])
 @login_required
 def volumescifsinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  volumes = volumesinfo('CIFS') 
  return jsonify({'allvolumes':volumes})
 
 @app.route('/api/v1/volumes/ISCSI/volumesinfo', methods=['GET','POST'])
 @login_required
 def volumesiscsiinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  volumes = volumesinfo('ISCSI') 
  return jsonify({'allvolumes':volumes})
 
 @app.route('/api/v1/volumes/NFS/volumesinfo', methods=['GET','POST'])
 @login_required
 def volumesnfsinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  volumes = volumesinfo('NFS') 
  return jsonify({'allvolumes':volumes})
 
 @app.route('/api/v1/volumes/HOME/volumesinfo', methods=['GET','POST'])
 @login_required
 def volumeshomeinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  volumes = volumesinfo('HOME') 
  return jsonify({'allvolumes':volumes})
 
 @app.route('/api/v1/volumes/volumesinfo', methods=['GET','POST'])
 @login_required
 def volumesallinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  volumes = volumesinfo() 
  return jsonify({'allvolumes':volumes})
 
@@ -532,6 +568,8 @@ def volumesallinfo(data):
 @login_required
 def poolsinfo(data):
  global allpools
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  allpools = getpools()
  allpools.append({'id':len(allpools), 'text':'-------'})
  return jsonify({'results':allpools})
@@ -587,11 +625,15 @@ def userchange(data):
 @app.route('/api/v1/info/onedaylog', methods=['GET','POST'])
 @login_required
 def getonedaylog(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  result = onedaylog() 
  return result 
 @app.route('/api/v1/info/logs', methods=['GET','POST'])
 @login_required
 def getalllogs(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  notif = getlogs()
  return jsonify({'alllogs': notif})
 
@@ -610,6 +652,8 @@ def renewtoken(data):
 @login_required
 def getcversion(data):
     global leaderip, leader, myhost
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     cmdline='/TopStor/getcversion.sh '+leaderip+' '+leader+' '+myhost
     #subprocess.run(cmdline,stdout=subprocess.PIPE)
     postchange(cmdline)
@@ -801,7 +845,6 @@ def volumeconfig(data):
  global allinfo, myhost
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
-
  getalltime()
  volume = allinfo['volumes'][data['volume']]
  owner = volume['host']
@@ -961,6 +1004,8 @@ def volumesnapshotdel(data):
 @login_required
 def volumeactive(data):
  global allinfo, myhost
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  pool = allinfo['volumes'][data['name']]['pool']
  prot = allinfo['volumes'][data['name']]['prot']
  owner = allinfo['volumes'][data['name']]['host']
@@ -1066,7 +1111,11 @@ def UnixAddUser(data):
  if 'NoHome' in data['Volpool']:
   pool = 'NoHome'
  else:
-  pool = allpools[int(data.get('Volpool'))]['text']
+  if is_valid_ip(data.get('HomeAddress')):
+    pool = allpools[int(data.get('Volpool'))]['text']
+  else:
+    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    return data
  if '--' in pool:
   pool = 'NoHome'
  grps = data.get('groups')
@@ -1085,8 +1134,11 @@ def UnixAddUser(data):
  return data 
 
 @app.route('/api/v1/volumes/grouplist', methods=['GET'])
+@login_required
 def api_volumes_groupslist():
  global allgroups, allusers
+ if 'baduser' in data['response']:
+  return {'response': 'baduser'}
  thegroup = [] 
  api_users_userslist()
  for group in allgroups:
@@ -1103,8 +1155,11 @@ def api_volumes_groupslist():
 
 
 @app.route('/api/v1/groups/grouplist', methods=['GET'])
+@login_required
 def api_groups_groupslist():
  global allgroups, allusers
+ if 'baduser' in data['response']:
+  return {'response': 'baduser'}
  thegroup = [] 
  api_users_userslist()
  for group in allgroups:
@@ -1141,8 +1196,11 @@ def userauths(data):
  return jsonify({'auths':priv, 'response':data['response']})
 
 @app.route('/api/v1/partners/partnerlist', methods=['GET'])
+@login_required
 def api_partners_userslist():
  global leaderip
+ if 'baduser' in data['response']:
+  return {'response': 'baduser'}
  allpartners=[]
  partnerlst = etcdgetjson(leaderip,'Partner/','--prefix')
  for partner in partnerlst:
@@ -1155,6 +1213,8 @@ def api_partners_userslist():
 @login_required
 def api_users_userslist(data):
  global allgroups, allusers, leaderip
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  userlst = etcdgetjson(leaderip,'usersinfo','--prefix')
  allgroups = getgroups()
  userdict = dict()
@@ -1190,8 +1250,11 @@ def api_users_userslist(data):
  return jsonify(alldict)
 
 @app.route('/api/v1/groups/userlist', methods=['GET'])
+@login_required
 def api_groups_userlist():
  global allusers
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  usr = []
  api_users_userslist()
  for user in allusers:
@@ -1200,8 +1263,11 @@ def api_groups_userlist():
 
 
 @app.route('/api/v1/users/grouplist', methods=['GET'])
-def api_users_grouplist():
+@login_required
+def api_users_grouplist(data):
  global allgroups
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
  allgroups = getgroups()
  grp = []
  for group in allgroups:
@@ -1209,7 +1275,10 @@ def api_users_grouplist():
  return jsonify({'results':grp})
 
 @app.route('/api/v1/resources/books/all', methods=['GET'])
+@login_required
 def api_all():
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     conn = sqlite3.connect('books.db')
     conn.row_factory = dict_factory
     cur = conn.cursor()
@@ -1260,6 +1329,8 @@ def api_filter():
 @login_required
 def offlineOrOnlineDisk(data):
     global allinfo, myhost, leaderip
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     getalltime()
     action = data['action']
     pool = data['pool']
@@ -1278,6 +1349,8 @@ def offlineOrOnlineDisk(data):
 @login_required
 def getNodeConfigFile(data):
     global leaderip
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     nodeName = data["nodeName"]
     nodeConfig = getConfig(leaderip, nodeName)
     file_path = "/TopStordata/" + nodeName + "_config.txt"
@@ -1287,6 +1360,8 @@ def getNodeConfigFile(data):
 #@login_required
 def getAllConfigFiles():
     global leaderip, readyhosts
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
     hostsready()
     configFiles = []
     zipfilePath = "/TopStordata/All_Configs.zip"
