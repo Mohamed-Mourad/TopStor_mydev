@@ -490,8 +490,6 @@ def volumessnapshotsinfo(data):
 
 def volumesinfo(prot='all'):
  global allvolumes, alldsks, allinfo
- if 'baduser' in data['response']:
-      return {'response': 'baduser'}
  getalltime()
  allgroups = getgroups()
  volgrouplist = []
@@ -1135,12 +1133,12 @@ def UnixAddUser(data):
 
 @app.route('/api/v1/volumes/grouplist', methods=['GET'])
 @login_required
-def api_volumes_groupslist():
+def api_volumes_groupslist(data):
  global allgroups, allusers
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  thegroup = [] 
- api_users_userslist()
+ api_users_userslist(data)
  for group in allgroups:
   groupusers = []
   for user in allusers:
@@ -1156,12 +1154,12 @@ def api_volumes_groupslist():
 
 @app.route('/api/v1/groups/grouplist', methods=['GET'])
 @login_required
-def api_groups_groupslist():
+def api_groups_groupslist(data):
  global allgroups, allusers
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  thegroup = [] 
- api_users_userslist()
+ api_users_userslist(data)
  for group in allgroups:
  # if group[0] == 'Everyone':
  #  continue
@@ -1197,7 +1195,7 @@ def userauths(data):
 
 @app.route('/api/v1/partners/partnerlist', methods=['GET'])
 @login_required
-def api_partners_userslist():
+def api_partners_userslist(data):
  global leaderip
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
@@ -1251,12 +1249,12 @@ def api_users_userslist(data):
 
 @app.route('/api/v1/groups/userlist', methods=['GET'])
 @login_required
-def api_groups_userlist():
+def api_groups_userlist(data):
  global allusers
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
  usr = []
- api_users_userslist()
+ api_users_userslist(data)
  for user in allusers:
   usr.append({'id':user['id'],'text':user['name']})
  return jsonify({'results':usr})
@@ -1274,56 +1272,6 @@ def api_users_grouplist(data):
   grp.append({'id':group[1],'text':group[0]})
  return jsonify({'results':grp})
 
-@app.route('/api/v1/resources/books/all', methods=['GET'])
-@login_required
-def api_all():
-    if 'baduser' in data['response']:
-      return {'response': 'baduser'}
-    conn = sqlite3.connect('books.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-    all_books = cur.execute('SELECT * FROM books;').fetchall()
-
-    return jsonify(all_books)
-
-
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return "<h1>404</h1><p>The resource could not be found.</p>", 404
-
-
-@app.route('/api/v1/resources/books', methods=['GET'])
-def api_filter():
-    query_parameters = request.args
-
-    id = query_parameters.get('id')
-    published = query_parameters.get('published')
-    author = query_parameters.get('author')
-
-    query = "SELECT * FROM books WHERE"
-    to_filter = []
-
-    if id:
-        query += ' id=? AND'
-        to_filter.append(id)
-    if published:
-        query += ' published=? AND'
-        to_filter.append(published)
-    if author:
-        query += ' author=? AND'
-        to_filter.append(author)
-    if not (id or published or author):
-        return page_not_found(404)
-
-    query = query[:-4] + ';'
-
-    conn = sqlite3.connect('books.db')
-    conn.row_factory = dict_factory
-    cur = conn.cursor()
-
-    results = cur.execute(query, to_filter).fetchall()
-    return jsonify(results)
 
 @app.route('/api/v1/pools/actionOnDisk', methods=['GET','POST'])
 @login_required
