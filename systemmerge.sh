@@ -1,10 +1,8 @@
 #!/usr/bin/sh
 fnupdate () {
 	echo '###########################################' $1
-	git rm -rf __py*
-	rm -rf __py*
-	currentbranch=`git branch | grep '*' | awk '{print $NF}'`
-	git checkout -D $1_$currentbranch
+	currentbranch=$3
+	git branch -D $1_$currentbranch
 	git checkout -b $1_$currentbranch
 	git merge origin $1
 	#if [ $? -ne 0 ];
@@ -27,11 +25,13 @@ then
 	echo no valid branch is supplied .... exiting
 	exit
 fi 
+currentbranch=`git branch | grep '*' | awk -F'_' '{print $1}'`
 echo $branch | grep samebranch
 if [ $? -eq 0 ];
 then
 	branch=`git branch | grep '*' | awk '{print $2}'`
 fi
+/TopStor/systempull.sh $currentbranch
 flag=1
 while [ $flag -ne 0 ];
 do
@@ -46,7 +46,7 @@ do
 			echo the directory $job is not found... exiting
 			exit
 		fi
-		fnupdate $branch $job
+		fnupdate $branch $job $currentbranch
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$job//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
