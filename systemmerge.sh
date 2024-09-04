@@ -10,10 +10,10 @@ fnupdate () {
 #		echo something went wrong while updating $1 .... consult the devleloper
 #		exit
 #	fi
-	echo '------checking differrences in '$2' between the branches '$1'and '$currentbranch'-------------'
+	echo '------checking differrences in '$2' between the branches '$1' and '$currentbranch'-------------'
 	git diff --name-status  $1 $1_$currentbranch 
 	#git diff -U3 $1_$currentbranch $1 
-	echo '------end of deifferrences in '$2'  between the branches '$1'and '$currentbranch'-------------'
+	echo '------end of deifferrences in '$2'  between the branches '$1' and '$currentbranch'-------------'
 	sync
 	sync
 	sync
