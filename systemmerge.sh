@@ -33,6 +33,8 @@ then
 fi
 /TopStor/systempull.sh $branch
 /TopStor/systempull.sh $currentbranch
+echo .............................................................................
+echo start mergin
 flag=1
 while [ $flag -ne 0 ];
 do
