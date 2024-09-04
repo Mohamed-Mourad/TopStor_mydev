@@ -747,6 +747,7 @@ def getlogin(token):
  userdict, token = setlogin(leaderip, myhost,user,'!',token) 
  if token == 0:
   logmsg.sendlog('Lognsa0','warning','system',user)
+  return 'baduser'
   print('#################33','baduser')
    
   return 'baduser'
