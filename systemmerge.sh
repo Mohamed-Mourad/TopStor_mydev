@@ -49,7 +49,8 @@ do
 			echo the directory $job is not found... exiting
 			exit
 		fi
-		fnupdate $branch $job $currentbranch
+		echo fnupdate $branch $job $currentbranch
+		#fnupdate $branch $job $currentbranch
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$job//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
