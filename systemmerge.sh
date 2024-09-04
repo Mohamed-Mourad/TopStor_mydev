@@ -25,7 +25,7 @@ then
 	echo no valid branch is supplied .... exiting
 	exit
 fi 
-currentbranch=`git branch | grep '*' | awk -F'_' '{print $1}'`
+currentbranch=`git branch | grep '*' | awk '{print $NF}' | awk -F'_' '{print $1}'`
 echo $branch | grep samebranch
 if [ $? -eq 0 ];
 then
