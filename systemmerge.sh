@@ -12,7 +12,7 @@ fnupdate () {
 #	fi
 	echo '------checking differrences in '$2' between the branches '$1'and '$currentbranch'-------------'
 	git diff --name-status $1 $1_$currentbranch 
-	git diff -U 3 x1 merge_y1
+	git diff -U3 $1 $1_$currentbranch
 	echo '------end of deifferrences in '$2'  between the branches '$1'and '$currentbranch'-------------'
 	sync
 	sync
