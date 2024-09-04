@@ -4,7 +4,7 @@ fnupdate () {
 	currentbranch=$3
 	git branch -D $1_$currentbranch
 	git checkout -b $1_$currentbranch
-	git merge origin $1
+	git merge $1
 	#if [ $? -ne 0 ];
 	#then
 #		echo something went wrong while updating $1 .... consult the devleloper
