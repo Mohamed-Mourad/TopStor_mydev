@@ -748,6 +748,11 @@ def volumecreate(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  datastr = ''
+ if is_valid_ip(data['ipaddress']):
+    print('ip is valid')
+ else:
+    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    return data
  getalltime()
  ownerip = allinfo['hosts'][allinfo['pools'][data['pool']]['host']]['ipaddress']
  data['owner'] = allinfo['hosts'][allinfo['pools'][data['pool']]['host']]['name']
@@ -857,6 +862,12 @@ def volumeconfig(data):
   data['chappas']='MezoAdmin'
   if 'ipaddress' not in data:
    data['ipaddress'] = volume['ipaddress']
+  else:
+    if is_valid_ip(data['ipaddress']):
+        print('ip is valid')
+    else:
+        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        return data
   if 'initiators' not in data:
    data['initiators'] = volume['initiators']
   if 'portalport' not in data:
@@ -901,6 +912,19 @@ def changepass(data):
 def hostconfig(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
+ if 'ipaddr' in data:
+    if is_valid_ip(data['ipaddr']):
+        print('valid ip')
+    else:
+        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        return data
+ if 'cluster' in data:
+    dataip = data['cluster'].split('/')[0]   
+    if is_valid_ip(dataip):
+        print('valid ip')
+    else:
+        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        return data
  datastr = ''
  for ele in data:
   datastr += ele+'='+data[ele]+' '
@@ -1093,6 +1117,11 @@ def UnixAddGroup(data):
 def AddPartner(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'} 
+ if is_valid_ip(data['ip']):
+    print('valid ip')
+ else:
+   logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+   return data
  print('##########################33333')
  print(data)
  print('##########################33333')
