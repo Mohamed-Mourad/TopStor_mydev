@@ -53,7 +53,7 @@ else
  	echo -e ' cat /etc/samba/smb.conf | grep' "'\[private\]'" >> /etc/smb${membername}.sh
  	echo -e ' if [ $? -eq 0 ];\nthen' >> /etc/smb${membername}.sh
  	echo -e '  cat /etc/samba/smb.conf | grep' "'\[home\]'" >> /etc/smb${membername}.sh
- 	echo -e '  if [ $? -eq 0 ];\nthen\nnotyet=0\nfi\nfi\nfi\ndone' >> /etc/smb${membername}.sh
+ 	echo -e '  if [ $? -eq 0 ];\nthen\nnotyet=0\nsleep 10\nfi\nfi\nfi\ndone' >> /etc/smb${membername}.sh
 	echo -e "cat /hostetc/smbmember.conf_$membername > /etc/samba/smb.conf" >> /etc/smb${membername}.sh
  	echo  "service samba --full-restart"  >> /etc/smb${membername}.sh
  	chmod +w /etc/smb${membername}.sh
