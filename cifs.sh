@@ -45,6 +45,7 @@ else
 	sed -i "s/DOMAINIP/$domainsrvi/g" /etc/smbmember.conf_$membername
 	sed -i "s/DOMAIN/${domain^^}/g" /etc/smbmember.conf_$membername
   	cat /TopStordata/smb.${ipaddr} >> /etc/smbmember.conf_$membername
+	echo nameserver $domainsrvi > /TopStordata/resolv_$wrkgrp
 	#cp /TopStordata/smbmember.conf_$membername /etc/smbmember.conf_$membername
  	echo -e 'notyet=1 \nwhile [ $notyet -eq 1 ];\ndo\nsleep 3' > /etc/smb${membername}.sh
  	echo -e 'cat /etc/samba/smb.conf | grep' "'\[public\]'" >> /etc/smb${membername}.sh
@@ -80,7 +81,7 @@ else
   		-v /etc/localtime:/etc/localtime:ro \
   		-v /etc/:/hostetc/   \
   		-v /TopStordata/smb.${ipaddr}:/etc/smb.conf:rw \
-		-v /TopStordata/resolv.conf:/etc/resolv.conf \
+		-v /TopStordata/resolv_$wrkgrp:/etc/resolv.conf \
   		-e DOMAIN_NAME=$domain \
   		-e ADMIN_SERVER=$domainsrvi \
   		-e WORKGROUP=$wrkgrp  \
