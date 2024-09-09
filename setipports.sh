@@ -7,7 +7,7 @@ myhost=` echo $@ | awk '{print $3}'`;
 pstatus=` echo $@ | awk '{print $4}'`;
 pports=$(ip a | awk -F: '/^[0-9]+: / {print $2}' | tr -d ' ')
 vols=`/TopStor/etcdget.py $clusterip vol --prefix`
-olderports=`/TopStor/etcdget.py $clusterip etherprots $myhost`
+olderports=`/TopStor/etcdget.py $clusterip etherports $myhost`
 dirtyports=0
 # Loop through each interface and extract IP addresses
 for port in $pports; do
