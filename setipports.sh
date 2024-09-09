@@ -40,8 +40,8 @@ done
 if [ $dirtyports -eq 1 ];
 then
 	stamp=`date +%s%N`
-	/pace/etcdput.py $clusterip sync/ipports/${myhost}/request ipports_$stamp.
-	/pace/etcdput.py $clusterip sync/ipports/${myhost}/request/$leader ipports_$stamp.
+	/pace/etcdput.py $clusterip sync/etherports/${myhost}/request ipports_$stamp.
+	/pace/etcdput.py $clusterip sync/etherports/${myhost}/request/$leader ipports_$stamp.
 fi
 
 
