@@ -40,6 +40,7 @@ done
 if [ $dirtyports -eq 1 ];
 then
 	stamp=`date +%s%N`
+	/pace/etcddel.py $clusterip sync/etherports --prefix 
 	/pace/etcdput.py $clusterip sync/etherports/${myhost}/request etherports_$stamp.
 	/pace/etcdput.py $clusterip sync/etherports/${myhost}/request/$leader etherports_$stamp.
 fi
