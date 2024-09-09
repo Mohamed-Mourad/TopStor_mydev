@@ -359,45 +359,9 @@ then
  /pace/watchdoginit & disown
  /pace/keepsendingprim & disown
 fi
-#########################################################################################################################################
-################################################# hossam was here ##################################
 
-# Extracting ZFS name:
-output=$(/TopStor/etcdget.py 10.11.11.100 mynode --prefix)
-mynode_name=$(echo "$output" | grep -oP "(?<=\('mynode', ')\S+(?='\))")
-mynode_ip=$(echo "$output" | grep -oP "(?<=\('mynodeip', ')\S+(?='\))")
-
-#---------------------------------------------------------------------------------
-
-# Searching through the database etherports/$mynode_name (ZFS name) and saving all saved ports in result
-result=$(/TopStor/etcdget.py 10.11.11.100 "etherports/$mynode_name" --prefix)
-
-#---------------------------------------------------------------------------------
-
-# Get network interfaces
-pports=$(ip a | awk -F: '/^[0-9]+: / {print $2}' | tr -d ' ')
-
-# Loop through each interface and extract IP addresses
-for port in $pports; do
-    # Extract IP addresses for the current interface
-    ip_addresses=$(ip a show "$port" 2>/dev/null | grep -oP '(?<=inet\s)\d+\.\d+\.\d+\.\d+')
-
-    # Proceed only if the interface has IP addresses
-    if [ -n "$ip_addresses" ]; then
-        # Concatenate multiple IP addresses with '/'
-        concatenated_ips=$(echo "$ip_addresses" | tr '\n' '/')
-        # Remove the trailing slash
-        concatenated_ips=${concatenated_ips%/}
-
-        # Check if the port is already in the etcd database
-        if ! echo "$result" | grep -q "etherports/$mynode_name/$port"; then
-            # Update etcd with the interface and its concatenated IP addresses
-            /TopStor/etcdput.py 10.11.11.100 "etherports/$mynode_name/$port" "$concatenated_ips"
-        fi
-    fi
-done
-
-######################################################################################################################################
+echo /TopStor/setipports.sh $myclusterip $leader $myhost sync
+/TopStor/setipports.sh $myclusterip $leader $myhost sync
 
 
 
