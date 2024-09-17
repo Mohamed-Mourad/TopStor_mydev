@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import flask, os, Evacuate, subprocess, Joincluster, sys
+import flask, os, Evacuate, subprocess, Joincluster, sys, re
 from getversions import getversions
 from functools import wraps
 from copy import deepcopy
@@ -55,9 +55,41 @@ allinfo = 0
 def is_valid_ip(ip):
     try:
         ipaddress.ip_address(ip)
-        return True
+        return 0 
     except ValueError:
-        return False
+        return 10 
+
+
+def is_unique_ip(ip, vtype='NZ#@A' ):
+        global leaderip
+        allvols = get('vol', '--prefix')
+        allvols = [x for x in allvols if vtype not in str(x)]
+        allvols = str(allvols)
+        allnodes= get('Active','--prefix')
+        allnodes = str(allnodes)
+        allpartners= get('Partner','--prefix')
+        allpartners = str(allpartners)
+        allips = allvols+'/'+leaderip+'/'+allnodes+'/'+allpartners
+        ip_pattern = rf'\b{re.escape(ip)}\b' 
+        if bool(re.search(ip_pattern,allips)):
+                    print("Invalid IP")
+                    return 100 
+        print("Valid IP")
+        return 0 
+
+def is_unique_name(name):
+        global leaderip
+        allvols = str(get('vol', '--prefix'))
+        alluser= str(get('user','--prefix'))
+        allgrp= str(get('group','--prefix'))
+        allnames = allvols+'/'+alluser+'/'+allgrp
+        name_pattern = rf'\b{re.escape(name)}\b' 
+        if bool(re.search(name_pattern,allnames)):
+                    print("Invalid Name")
+                    return 1000 
+        print("Valid Name")
+        return 0 
+
 
 
 def getalltime(renew='no'):
@@ -748,10 +780,16 @@ def volumecreate(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  datastr = ''
- if is_valid_ip(data['ipaddress']):
+ isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],data['type']))+int(is_unique_name(data['name']))
+ if isvu == 0:
     print('ip is valid')
  else:
-    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    if isvu < 100:
+        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    elif isvu > 10 and isvu < 120: 
+        logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+    else:
+        logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
     return data
  getalltime()
  ownerip = allinfo['hosts'][allinfo['pools'][data['pool']]['host']]['ipaddress']
@@ -863,11 +901,18 @@ def volumeconfig(data):
   if 'ipaddress' not in data:
    data['ipaddress'] = volume['ipaddress']
   else:
-    if is_valid_ip(data['ipaddress']):
+    isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],volume['prot']))
+    if isvu == 0:
         print('ip is valid')
     else:
-        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
-        return data
+        if isvu < 100:
+            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        elif isvu > 10 and isvu < 120: 
+            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+        else:
+            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+    return data
+
   if 'initiators' not in data:
    data['initiators'] = volume['initiators']
   if 'portalport' not in data:
@@ -913,18 +958,35 @@ def hostconfig(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  if 'ipaddr' in data:
-    if is_valid_ip(data['ipaddr']):
-        print('valid ip')
+    isvu =  int(is_valid_ip(data['ipaddr']))+int(is_unique_ip(data['ipaddr']))
+    if isvu == 0:
+        print('ip is valid')
     else:
-        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
-        return data
+        if isvu < 100:
+            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        elif isvu > 10 and isvu < 120: 
+            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+        else:
+            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+    return data
  if 'cluster' in data:
     dataip = data['cluster'].split('/')[0]   
-    if is_valid_ip(dataip):
-        print('valid ip')
+    isvu =  int(is_valid_ip(dataip))+int(is_unique_ip(dataip))
+    if dataip == data['ipaddr']:
+        isvu = 1
+    if isvu == 0 and dataip != data['ipaddr']:
+        print('ip is valid')
     else:
-        logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
-        return data
+        if isvu == 1:
+            logmsg.sendlog('IPaddrclufa','error','system',loggedusers[data['token']]['user'])
+        if isvu < 100:
+            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        elif isvu > 10 and isvu < 120: 
+            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+        else:
+            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+    return data
+
  datastr = ''
  for ele in data:
   datastr += ele+'='+data[ele]+' '
@@ -1108,6 +1170,9 @@ def UnixAddGroup(data):
     if str(suser['id']) == str(usr):
      usrstr += suser['name']+',' 
   usrstr = usrstr[:-1]
+ if not is_unique_name(data['name']):
+    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    return data
  cmndstring = '/TopStor/UnixAddGroup '+leaderip+' '+data['name']+' '+' users'+usrstr+' '+data['user']
  postchange(cmndstring)
  return data
@@ -1117,11 +1182,18 @@ def UnixAddGroup(data):
 def AddPartner(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'} 
- if is_valid_ip(data['ip']):
-    print('valid ip')
+ isvu =  int(is_valid_ip(data['ip']))+int(is_unique_ip(data['ip']))
+ if isvu == 0:
+        print('ip is valid')
  else:
-   logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
-   return data
+        if isvu < 100:
+            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        elif isvu > 10 and isvu < 120: 
+            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+        else:
+            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+        return data
+
  print('##########################33333')
  print(data)
  print('##########################33333')
@@ -1138,11 +1210,23 @@ def UnixAddUser(data):
  if 'NoHome' in data['Volpool']:
   pool = 'NoHome'
  else:
-  if is_valid_ip(data.get('HomeAddress')):
-    pool = allpools[int(data.get('Volpool'))]['text']
-  else:
-    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+    isvu =  int(is_valid_ip(data['HomeAddress']))+int(is_unique_ip(data['HomeAddress'],'HOME'))
+    if isvu == 0:
+        print('ip is valid')
+    else:
+        if isvu < 100:
+            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+        elif isvu > 10 and isvu < 120: 
+            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+        else:
+            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+        return data
+
+
+ if int(is_unique_name(data['name']))==1000:
+    logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
     return data
+    
  if '--' in pool:
   pool = 'NoHome'
  grps = data.get('groups')

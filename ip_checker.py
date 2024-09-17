@@ -46,6 +46,39 @@ def check_ip_uniqueness(ip, vtype ):
         print(f"An error occurred while checking IP uniqueness: {e}")
         return 1
 
+def is_unique_ip(ip, vtype='NZ#@A' ):
+        leaderip ='10.11.11.100'
+        allvols = etcdget('10.11.11.100','vol', '--prefix')
+        allvols = [x for x in allvols if vtype not in str(x)]
+        allvols = str(allvols)
+        #allvols = ','.join([x for x in allvols])
+        allnodes= etcdget('10.11.11.100','Active','--prefix')
+        allnodes = str(allnodes)
+        allips = allvols + leaderip + allnodes
+        ip_pattern = rf'\b{re.escape(ip)}\b' 
+        print('-----------------------------------------')
+        print(allips)
+        print(ip) 
+        print('-----------------------------------------')
+        if bool(re.search(ip_pattern,allips)):
+                    print("Invalid IP")
+                    return False
+        print("Valid IP")
+        return True
+
+
+def is_unique_name(name,exclude="sldkfj"):
+        global leaderip
+        allvols = str(etcdget('10.11.11.100','vol', '--prefix'))
+        alluser= str(etcdget('10.11.11.100','user','--prefix'))
+        allgrps= str(etcdget('10.11.11.100','group','--prefix'))
+        allnames = allvols+'/'+alluser+'/'+allgrps
+        name_pattern = rf'\b{re.escape(name)}\b' 
+        if bool(re.search(name_pattern,allnames)):
+                    print("Invalid Name")
+                    return False
+        print("Valid Name")
+        return True
 
 
 
@@ -59,5 +92,5 @@ if __name__ == "__main__":
     ip_to_check = args.ip
     vtype = args.vtype
 
-    exit_code = check_ip_uniqueness(ip_to_check, vtype)
+    exit_code = is_unique_name(ip_to_check, vtype)
     exit(exit_code)
