@@ -975,7 +975,7 @@ def hostconfig(data):
     if 'ipaddr' in data:
         if dataip == data['ipaddr']:
             isvu = 1
-    if isvu == 0 and dataip != data['ipaddr']:
+    if isvu == 0:
         print('ip is valid')
     else:
         if isvu == 1:
