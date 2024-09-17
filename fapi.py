@@ -1171,8 +1171,9 @@ def UnixAddGroup(data):
     if str(suser['id']) == str(usr):
      usrstr += suser['name']+',' 
   usrstr = usrstr[:-1]
- if not is_unique_name(data['name']):
-    logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+
+ if int(is_unique_name(data['name']))==1000:
+    logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
     return data
  cmndstring = '/TopStor/UnixAddGroup '+leaderip+' '+data['name']+' '+' users'+usrstr+' '+data['user']
  postchange(cmndstring)
