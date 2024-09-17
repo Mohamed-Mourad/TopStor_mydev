@@ -972,8 +972,9 @@ def hostconfig(data):
  if 'cluster' in data:
     dataip = data['cluster'].split('/')[0]   
     isvu =  int(is_valid_ip(dataip))+int(is_unique_ip(dataip))
-    if dataip == data['ipaddr']:
-        isvu = 1
+    if 'ipaddr' in data:
+        if dataip == data['ipaddr']:
+            isvu = 1
     if isvu == 0 and dataip != data['ipaddr']:
         print('ip is valid')
     else:
