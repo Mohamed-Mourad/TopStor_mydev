@@ -1420,8 +1420,8 @@ def getNodeConfigFile(data):
     return send_file(file_path, mimetype='text/plain', as_attachment=True)
 
 @app.route('/api/v1/hosts/getAllConfig', methods=['GET','POST'])
-#@login_required
-def getAllConfigFiles():
+@login_required
+def getAllConfigFiles(data):
     global leaderip, readyhosts
     if 'baduser' in data['response']:
       return {'response': 'baduser'}
