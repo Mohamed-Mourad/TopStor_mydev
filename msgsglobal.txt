@@ -108,6 +108,10 @@ Unlin1024:2: : from :: user : will have a home directory in pool :
 Unlin1025:0: : from :: File uploaded successfully! Adding users started
 Unlin1026:0: : from :: Failed uploading file
 Unlin1027:0: : from :: Finished adding users
+IPaddrfa:0: : from :: Invalid IP address in the request 
+IPadduqfa:0: : from :: The IP address is already in use 
+IPnamuqfa:0: : from :: The name is already in use 
+IPaddrclufa:0: : from :: The cluster ip address is the same node address, this is not valid 
 Unst1024:1: : from :: Changing profile of user :
 Unsu1024:1: : from :: Success changing profile of user :
 Unfa1024:1: : from :: failed changing profile of user :
