@@ -911,7 +911,7 @@ def volumeconfig(data):
             logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
         else:
             logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
-    return data
+        return data
 
   if 'initiators' not in data:
    data['initiators'] = volume['initiators']
@@ -968,7 +968,7 @@ def hostconfig(data):
             logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
         else:
             logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
-    return data
+        return data
  if 'cluster' in data:
     dataip = data['cluster'].split('/')[0]   
     isvu =  int(is_valid_ip(dataip))+int(is_unique_ip(dataip))
@@ -980,13 +980,13 @@ def hostconfig(data):
     else:
         if isvu == 1:
             logmsg.sendlog('IPaddrclufa','error','system',loggedusers[data['token']]['user'])
-        if isvu < 100:
+        elif isvu < 100:
             logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
         elif isvu > 10 and isvu < 120: 
             logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
         else:
             logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
-    return data
+        return data
 
  datastr = ''
  for ele in data:
