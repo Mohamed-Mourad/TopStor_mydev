@@ -359,6 +359,13 @@ then
  /pace/watchdoginit & disown
  /pace/keepsendingprim & disown
 fi
+
+echo /TopStor/setipports.sh $myclusterip $leader $myhost sync
+/TopStor/setipports.sh $myclusterip $leader $myhost sync
+
+
+
+
 echo starting intstub 
 docker run -itd --rm --privileged \
   -v /TopStor/smb.conf:/etc/samba/smb.conf:rw \
