@@ -1209,6 +1209,7 @@ def UnixAddUser(data):
  global allgroups, leaderip
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
+ pool = data['Volpool']
  if 'NoHome' in data['Volpool']:
   pool = 'NoHome'
  else:
