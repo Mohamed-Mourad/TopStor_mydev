@@ -1210,7 +1210,7 @@ def UnixAddUser(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  pool = data['Volpool']
- if 'NoHome' in data['Volpool']:
+ if 'NoHome' in data['Volpool'] or '-' in data['Volpool']:
   pool = 'NoHome'
  else:
     isvu =  int(is_valid_ip(data['HomeAddress']))+int(is_unique_ip(data['HomeAddress'],'HOME'))
@@ -1230,8 +1230,6 @@ def UnixAddUser(data):
     logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
     return data
     
- if '--' in pool:
-  pool = 'NoHome'
  grps = data.get('groups')
  groupstr = ''
  allgroups = getgroups()
