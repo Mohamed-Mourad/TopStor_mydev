@@ -1,8 +1,8 @@
 #!/usr/bin/sh
 fnupdate () {
 	origin='http://10.11.11.252/git/'$3'.git'
-	remote='http://github.com/'$2'/'$1'_mydev.git'
-	QuickStor='http://github.com/MoatazNegm/'$3'.git'
+	remote='https://github.com/'$2'/'$1'_mydev.git'
+	QuickStor='https://github.com/MoatazNegm/'$3'.git'
 	git init
 	git remote add origin $origin
 	git remote add remote $remote 
