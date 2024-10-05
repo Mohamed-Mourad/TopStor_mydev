@@ -38,15 +38,15 @@ echo 2222222222222222222222222222222222222222222222
  else
  		etcd=$leaderip
  fi
- /pace/etcdget.py $leaderip volumes --prefix | grep -w $username
- if [ $? -eq 0 ];
- then
-  		docker exec etcdclient /TopStor/logmsg.py Unlin1021gv warning $userreq $username
-  		exit
- fi
  echo s$pullsync | grep pull
  if [ $? -ne 0 ]
  then
+ 			/pace/etcdget.py $leaderip volumes --prefix | grep -w $username
+ 			if [ $? -eq 0 ];
+ 			then
+  				docker exec etcdclient /TopStor/logmsg.py Unlin1021gv warning $userreq $username
+  				exit
+ 			fi
                         /TopStor/etcdget.py $etcd user --prefix | grep -w $username 
                         if [ $? -eq 0 ];
                         then
