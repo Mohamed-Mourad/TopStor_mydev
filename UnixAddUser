@@ -101,11 +101,15 @@ then
  echo $pullsync | grep pull
  if [ $? -ne 0 ]
  then
-	docker exec etcdclient docker exec etcdclient /TopStor/logmsg.py Unlin1024 info  $userreq $username $homedir
-  	echo hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-  	echo /TopStor/VolumeCreateHOME $leaderip $homePool $username $size $username $HomeAddr $HomeSubnet active $userreq $myhost $userreq 
-  	/TopStor/VolumeCreateHOME $leaderip $homePool $username $size $username $HomeAddr $HomeSubnet active $userreq $myhost $userreq 
-  	echo hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+ 	echo $homePool | grep 'NoHome'
+ 	if [ $? -ne 0 ];
+ 	then
+		docker exec etcdclient docker exec etcdclient /TopStor/logmsg.py Unlin1024 info  $userreq $username $homedir
+  		echo hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+  		echo /TopStor/VolumeCreateHOME $leaderip $homePool $username $size $username $HomeAddr $HomeSubnet active $userreq $myhost $userreq 
+  		/TopStor/VolumeCreateHOME $leaderip $homePool $username $size $username $HomeAddr $HomeSubnet active $userreq $myhost $userreq 
+  		echo hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+	fi
  fi
 
  currentcifs=`docker ps | awk '{print $NF}' | grep CIFS | grep -v 'CIFS_'`

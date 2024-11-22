@@ -115,37 +115,40 @@ def checker(user, usersNames, poolNames, groupNames, newGroups):
     flag = False
     if (user['name'] in usersNames or  pd.isnull(user['name']) or user['name'] == ''):
         flag = True
-    if ( pd.isnull(user['Password']) or len(user['Password']) < 3):
+        print('here 1')
+    elif ( pd.isnull(user['Password']) or len(user['Password']) < 3):
         flag = True
+        print('here 2')
     # Checks if the user selected a Pool.
-    if (not (pd.isnull(user['Volpool']) or user['Volpool'] == '')):
-        if (user['Volpool'] != len(user['Volpool']) * '-'):
-            # Checks that the Pool is valid.
-            if (not (user['Volpool'].lower() in poolNames)):
-                flag = True
-
+    elif (not (user['Volpool'].lower() in poolNames)):
+         flag = True
+         print('here 3')
     # Checks if the user selected a group.
-    if (not (pd.isnull(user['groups']) or user['groups'] == '')):
+    elif (not (pd.isnull(user['groups']) or user['groups'] == '')):
         # Checks that each group selected is valid.
         for group in user['groups'].split(','):
             if (group): 
                 if (not (group.strip() in groupNames) and len(group.strip()) < 3):
                     flag = True
+                    print('here 4')
                 elif (not (group.strip() in groupNames) and group.strip() != "NoGroup"):
                     newGroups.add(group.strip())
         
     # Checks if the user selected a HomeAddress.
-    if (not(pd.isnull(user['HomeAddress']) or user['HomeAddress'] == '' or user['HomeAddress'].lower()  == 'NoAddress'.lower() or user['HomeAddress'].lower()  == 'No Address'.lower())):
+    elif (not(pd.isnull(user['HomeAddress']) or user['HomeAddress'] == '' or user['HomeAddress'].lower()  == 'NoAddress'.lower() or user['HomeAddress'].lower()  == 'No Address'.lower())):
         # Checks if the HomeAddress is in the correct form.
         if (len(user['HomeAddress'].split('.')) == 4):
             # Checks that each number is valid.
             for number in user['HomeAddress'].split('.'):
                 if (not number.isdigit()):
                     flag = True
+                    print('here 5')
                 elif (int(number) > 255 or int(number) < 0):
                     flag = True
+                    print('here 6')
         else:
             flag = True
+            print('here 7')
     return flag
 
 # Takes in the Excel file path, it parses the file and creates goodusers list
@@ -155,6 +158,10 @@ def excelParser(filePath):
     df = df.fillna('')
     df['name'] = df['name'].str.rstrip()
     df['Volpool'] = df['Volpool'].str.rstrip()
+    df['volname_modified'] = 'NoHome'
+    df.loc[df['Volpool'].str.contains('pdhcp'), 'volname_modified'] = df['Volpool']
+    df['Volpool'] = df['volname_modified']
+    df.drop('volname_modified', axis=1, inplace=True)
     df['HomeAddress'] = df['HomeAddress'].str.rstrip()
     df['HomeSubnet'] = df['HomeSubnet'].str.rstrip()
     df['Volsize'] = df['Volsize'].str.rstrip()
@@ -165,9 +172,9 @@ def excelParser(filePath):
     groupNames = [group['text'] for group in groups]
     poolNames = [pool['text'].lower() for pool in pools]
     poolNames.append('nohome')
-    poolNames.append('no home')
-    poolNames.append('nopool')
-    poolNames.append('no pool')
+    #poolNames.append('no home')
+    #poolNames.append('nopool')
+    #poolNames.append('no pool')
     
     goodUsers = []
     badUsers = []
@@ -179,6 +186,8 @@ def excelParser(filePath):
         else:
             goodUsers.append(user)
             usersNames.append(user['name']);
+    print('goodUsers',goodUsers)
+    print('badUsers',badUsers)
     return goodUsers, newGroups
 
 # Takes in leaderip, user and Excel file. Creates a list of goodusers and addes them using UnixAddUser script.
@@ -215,7 +224,7 @@ def addUsers(*argv):
             subnet = user['HomeSubnet']
         if (not (user['Volsize'] == '')):
             size = user['Volsize']
-        cmdline = '/TopStor/UnixAddUser {} {} {} groups{} {} {}G {} {} hoststub {}'.format(argv[0], user['name'], pool, groups, user['Password'],size, address, subnet, argv[1])
+        cmdline = '/TopStor/UnixAddUser {} {} {} groups{} {} {}G {} {} hoststub {}'.format(argv[0], user['name'], pool, groups, user['Password'],size, address, subnet, argv[1],'newuser')
         subprocess.run(cmdline.split(' '))
     initlog(argv[0], argv[2])
     sendlog('Unlin1027', 'info', argv[1])

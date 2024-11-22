@@ -134,7 +134,7 @@ def uploadUsers(data):
       filename =  uploaded_file.filename.replace(' ', '')
       filePath = os.path.join(dirPath, filename)
       uploaded_file.save(filePath)
-      cmdline = 'python /TopStor/UsersMassAddition.py '+ leaderip +' '+ data['user'] + ' ' + myhost + ' ' + filePath
+      cmdline = 'python /TopStor/UsersMassAddition.py '+ leaderip +' '+ data['user'] + ' ' + myhost + ' ' + filePath + ' '+ data['token']
       postchange(cmdline)
       logmsg.sendlog('Unlin1025', 'info', data["user"])
       return {"data":data}
