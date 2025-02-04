@@ -240,6 +240,17 @@ def versions(data):
       return {'response': 'baduser'}
  return getversions()
 
+@app.route('/api/v1/software/apply', methods=['GET','POST'])
+@login_required
+def swapply(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
+ cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]
+ postchange(cmdline)
+ versions = versions(data)
+ return versions
+
+
 #@app.route('/api/v1/hosts/info', methods=['GET','POST'])
 def hostsinfo():
  global allhosts, readyhosts, activehosts, losthosts, possiblehosts
