@@ -1,4 +1,4 @@
-#!/usr/bin/sh
-for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
-  echo "$(git log -1 --format='%ci' $branch) $branch"
-done | sort | awk '{print $1" "$4}'
+#!/bin/sh
+git for-each-ref --sort=-creatordate --format '%(refname:short) %(creatordate:short) %(objectname:short)' refs/heads/ | while read -r branch date commit; do
+    echo "$branch,$date,$commit"
+done
