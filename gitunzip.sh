@@ -4,7 +4,7 @@
 
 TARGET_DIR='/TopStor_temp'
 DIFF_ZIP='/root/gitzip.zip'
-
+branch='QSD3.65'
 # Check if target directory exists
 if [ ! -d "$TARGET_DIR" ]; then
     echo "Error: Target directory does not exist"
@@ -36,10 +36,10 @@ cd "$TARGET_DIR" || exit 1
 # Add all changes to git
 git add .
 
-# Create new branch x2 if it doesn't exist and switch to it
-git checkout -b x2 2>/dev/null || git checkout x2
+# Create new branch $branch if it doesn't exist and switch to it
+git checkout -b $branch 2>/dev/null || git checkout $branch 
 
 # Commit changes
 git commit -m "Applied changes from diff zip"
 
-echo "Successfully applied changes and switched to branch x2"
+echo "Successfully applied changes and switched to branch $branch"
