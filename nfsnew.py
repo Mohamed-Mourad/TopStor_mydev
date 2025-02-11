@@ -25,26 +25,26 @@ def create(leader, leaderip, myhost, myhostip, etcdip, pool, name, ipaddr, ipsub
            continue
         leftvol = vol[0].split('/')[4]
         mounts += '-v/'+pool+'/'+leftvol+':/'+pool+'/'+leftvol+':rw'
-        with open('/TopStordata/tempnfs.'+ipaddr,'a') as fip:
-            try:
-                with open('/'+pool+'/exports.'+leftvol, 'r') as fvol:
-                    fip.write(fvol.read())
-            except:
-               continue 
- 
+   #     with open('/TopStordata/tempnfs.'+ipaddr,'a') as fip:
+   #         try:
+   #             with open('/'+pool+'/exports.'+leftvol, 'r') as fvol:
+   #                 fip.write(fvol.read())
+   #         except:
+   #            continue 
     if len(volsip) < 1 :
         return
-    who = volsip[0][1].split('/')[2]
-    exports = ''
-    for vol in volsip:
-        if vol in notsametype:
-           continue
-        exp = '/'+vol[0].split('/')[3]+'/'+vol[0].split('/')[4]
-        exports = exp +' '+ who+'('+','.join(vol[1].split('/')[3:8])+')\n'
-        with open('/TopStordata/exportip.'+vol[0].split('/')[4]+'_'+ipaddr,'w') as fip:
-            fip.write(exports)
+    #who = volsip[0][1].split('/')[2]
+    #exports = ''
+    #for vol in volsip:
+    #    if vol in notsametype:
+    #       continue
+    #    exp = '/'+vol[0].split('/')[3]+'/'+vol[0].split('/')[4]
+    #    exports = exp +' '+ who+'('+','.join(vol[1].split('/')[3:8])+')\n'
+    #    with open('/TopStordata/exportip.'+vol[0].split('/')[4]+'_'+ipaddr,'w') as fip:
+    #        fip.write(exports)
      
-    cmdline = '/TopStor/nfsnew.sh '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype
+    cmdline = '/TopStor/nfsnew.sh '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype+' '+'/'+pool+'/'+leftvol  
+
     print('second cmdline',cmdline)
     subprocess.run(cmdline.split(),stdout=subprocess.PIPE)  
     return
