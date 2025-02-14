@@ -22,8 +22,6 @@ fnupdate () {
 	sync
 	sync
 	sync
-	echo running any needed scripts
-	./pre_apply.sh	
 }
 cjobs=(`echo TopStor pace topstorweb`)
 branch=$1
@@ -61,6 +59,8 @@ do
 		flag=0
 	fi
 done
+echo running any needed scripts
+./pre_apply.sh	
 cd /topstorweb
 git show | grep commit
 cd /pace
