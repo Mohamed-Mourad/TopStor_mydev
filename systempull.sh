@@ -1,5 +1,6 @@
 #!/usr/bin/sh
 fnupdate () {
+	rm -rf pre_apply.sh	
 	echo '###########################################' $1
 	git fetch origin $1
 	if [ $? -ne 0 ];
@@ -21,6 +22,7 @@ fnupdate () {
 	sync
 	sync
 	sync
+	./pre_apply.sh	
 }
 cjobs=(`echo TopStor pace topstorweb`)
 branch=$1
