@@ -22,6 +22,7 @@ fnupdate () {
 	sync
 	sync
 	sync
+	echo running any needed scripts
 	./pre_apply.sh	
 }
 cjobs=(`echo TopStor pace topstorweb`)
