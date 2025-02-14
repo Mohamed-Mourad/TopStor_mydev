@@ -13,6 +13,14 @@ def getsnapperiods(voldict):
  periodsdict = dict()
  snapperiods = get(hostip,'Snapperiod','--prefix') 
  snapperiods = [ x for x in snapperiods if 'hosttrend' not in str(x) ]
+ if len(snapperiods) < 1 or snapperiods[0] == '_1':
+    return periodsdict, voldict
+ print('########################################################################3333333333333')
+ print(voldict)
+ print('snappreiods',snapperiods)
+ with open('/TopStor/tempfile','w') as f:
+    f.write(str(snapperiods))
+ print('########################################################################3333333333333')
  for per in snapperiods:
   leftper = per[0].split('/')
   rightper = per[1].split('/')
@@ -218,7 +226,9 @@ def getall(leadip, alldsks='0'):
  print('disks',disksdict)
  return {'hosts':hostsdict, 'pools':poolsdict, 'raids':raidsdict, 'disks':disksdict, 'volumes':volumesdict, 'snapshots':snapshotsdict, 'snapperiods':snapperiodsdict}
 
- 
+def initallphy(ipadd):
+    global hostip
+    hostip = ipadd 
 if __name__=='__main__':
  hostip = sys.argv[1]
  alldsks = get(hostip,'host','current')

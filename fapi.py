@@ -7,7 +7,7 @@ from flask import request, jsonify, render_template, redirect, url_for, g, send_
 import re, ipaddress
 import Hostsconfig
 from Hostconfig import config
-from allphysicalinfo import getall 
+from allphysicalinfo import getall, initallphy
 from UnixChkUser import setlogin
 import sqlite3
 from etcdget2 import etcdgetjson
@@ -1460,6 +1460,7 @@ if __name__=='__main__':
     myhostip = get('clusternodeip')[0]
     leader = get('leader')[0]
     logmsg.initlog(leaderip,myhost)
+    initallphy(leaderip)
     #myhost = sys.argv[2]
     getalltime()
    #myhostip = sys.argv[5]
