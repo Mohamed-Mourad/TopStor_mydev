@@ -60,7 +60,7 @@ do
 	fi
 done
 echo running any needed scripts
-./pre_apply.sh	
+/TopStor/pre_apply.sh	
 cd /topstorweb
 git show | grep commit
 cd /pace
