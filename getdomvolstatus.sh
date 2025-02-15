@@ -2,13 +2,29 @@
 export ETCDCTL_API=3
 cd /TopStor/
 volip=`echo $@ | awk '{print $1}'`
+vtype=`echo $@ | awk '{print $2}'`
 voldocker=`docker ps | grep $volip | awk '{print $NF}'`
-echo s$voldocker | grep CIFS >/dev/null
+echo s$voldocker | grep $vtype >/dev/null
 if [ $? -ne 0 ];
 then
 	echo _resultservicedown_result
 	exit
 fi
+dockerlogs=`docker logs $voldocker 2>&1`
+echo NFS | grep $vtype
+if [ $? -eq 0 ];
+then
+	echo $dockerlogs | grep 'Startup successful'
+	if [ $? -eq 0 ];
+	then
+		echo _resultserviceok_result
+		exit
+	else
+		echo _resultservicedown_result
+		exit
+	fi
+fi
+	
 dockerlogs=`docker logs $voldocker 2>&1`
 echo $dockerlogs | grep skew >/dev/nul
 if [ $? -eq 0 ];
