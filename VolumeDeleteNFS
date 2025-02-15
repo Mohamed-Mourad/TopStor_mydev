@@ -1,15 +1,14 @@
 #!/bin/sh
 cd /TopStor
-echo $@ > /root/VolumeDeleteNFS
-export ETCDCTL_API=3
+echo $@ > ~/`basename "$0"`
 datenow=`date +%m/%d/%Y`; timenow=`date +%T`;
 volname=`echo $@ | awk '{print $3}'`;
 leaderip=`echo $@ | awk '{print $1}'`;
 pDG=`echo $@ | awk '{print $2}'`;
 pro=`echo $@ | awk '{print $4}'`;
 userreq=` echo $@ | awk '{print $5}'`;
-DG=`echo $pDG `;
-privilege='CIFS';
+DG=pDG;
+privilege=$pro;
 contrun=`./privthis.sh $privilege $userreq`;
 if [[ $contrun == 'true' ]]
 then
@@ -19,42 +18,36 @@ then
 	echo $leader | grep $myhost
 	if [ $? -ne 0 ];
 	then
+		echo hihih
  		etcd=$myhostip
 	else
+		echo nono
  		etcd=$leaderip
  	fi
-
- echo $@ > /root/VolumeDestroy
- docker exec etcdclient /TopStor/logmsg.py NFS1000 info $userreq $volname
- rm -f /TopStordata/exportip.${volname}*
- #/TopStor/nfs.sh
- exportfs -r 
- volip=`zfs get ip:addr $DG/$volname -H -ovalue`
- volsubnet=`zfs get ip:subnet $DG/$volname -H -ovalue`
- /sbin/zfs destroy -r $DG/$volname
+ echo etcd=$etcd
+ docker exec etcdclient /TopStor/logmsg.py NFS1000 info $userreq $pDG/$volname
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` running $userreq
+ ipaddr=`/TopStor/etcdget.py $etcd volume $volname | awk -F'administrator' '{ print $2}' | awk -F'/' '{print $3}'`
+ vtype=`/TopStor/etcdget.py $etcd volume $volname | awk -F'/' '{print $2}'`
+ echo ip=$ipaddr
+ stamp=`date +%s`
+ ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${pDG}_$name/request volumes_$stamp
+ ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${pDG}_$name/request/$leader volumes_$stamp
+ /TopStor/nfsremove.sh $leaderip $pDG $volname $ipaddr $vtype 2>/root/errcifsremove
+ /TopStor/SnapShotPeriodDelete $leaderip $volname $userreq
+ echo /sbin/zfs destroy -rf $pDG/$volname 
+ /sbin/zfs unmount -f $pDG/$volname 
+ /sbin/zfs destroy -rf $pDG/$volname 
  if [ $? -ne 0  ]; then
-  docker exec etcdclient /TopStor/logmsg.py NFS1001 error $userreq $volname
- else 
-  /pace/etcddel.py $leaderip volumes $volname
-  allips=`/pace/etcdget.py $leaderip volumes`
-  echo $allips | grep $volip
-  if [ $? -ne 0 ];
-  then
-   	nmcli conn mod cmynode -ipv4.addresses ${volip}/$volsubnet
-  	nmcli conn up cmynode
-  fi
-  stamp=`date +%s`
-  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request volumes_$stamp
-  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request/$leader volumes_$stamp
-  #/pace/delbroadcastlocal.py volumes $volname
-  /TopStor/SnapShotPeriodDelete $leaderip $volname $userreq
-  docker exec etcdclient /TopStor/logmsg.py NFS1002 info $userreq $volname
-  rm -rf /$DG/exports.$volname
-    
+   docker exec etcdclient /TopStor/logmsg.py NFS1001 error $userreq $volname
+   echo /sbin/zfs destroy -rf $pDG/$volname >/root/errorVolumeDeleteCIFS
+   docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq
+   exit
  fi
- rm -rf /$DG/exports.$volname
+ rm -rf $pDG/$volname 
+ echo rm -rf $pDG/$volname 
+ docker exec etcdclient /TopStor/logmsg.py NFS1002 info $userreq $pDG/$volname
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq
 fi
-echo $perfmon | grep 1
-if [ $? -eq 0 ]; then
- docker exec etcdclient /TopStor/logqueue.py VolumeDeleteNFS stop system 
-fi
+ docker exec etcdclient /TopStor/etcdputlocal.py dirty/volume 0
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq

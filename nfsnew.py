@@ -20,11 +20,16 @@ def create(leader, leaderip, myhost, myhostip, etcdip, pool, name, ipaddr, ipsub
     cmdline='rm -rf /TopStordata/tempnfs.'+ipaddr
     subprocess.run(cmdline.split(),stdout=subprocess.PIPE)  
     mounts =''
+    writes =''
     for vol in volsip:
         if vol in notsametype:
            continue
         leftvol = vol[0].split('/')[4]
         mounts += '-v/'+pool+'/'+leftvol+':/'+pool+'/'+leftvol+':rw'
+        rightvol = vol[1].split('/_u_')[1].split('/')[0]
+        rightvolu = rightvol.split('_u_')[0]
+        rightvolg = rightvol.split('_u_')[1]
+        writes += '_vol_/'+pool+'/'+leftvol+'_u_'+rightvolu+'_u_'+rightvolg
    #     with open('/TopStordata/tempnfs.'+ipaddr,'a') as fip:
    #         try:
    #             with open('/'+pool+'/exports.'+leftvol, 'r') as fvol:
@@ -43,7 +48,7 @@ def create(leader, leaderip, myhost, myhostip, etcdip, pool, name, ipaddr, ipsub
     #    with open('/TopStordata/exportip.'+vol[0].split('/')[4]+'_'+ipaddr,'w') as fip:
     #        fip.write(exports)
      
-    cmdline = '/TopStor/nfsnew.sh '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype+' '+'/'+pool+'/'+leftvol  
+    cmdline = '/TopStor/nfsnew.sh '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype+' '+'/'+pool+'/'+leftvol+' '+writes+'_vol_'
 
     print('second cmdline',cmdline)
     subprocess.run(cmdline.split(),stdout=subprocess.PIPE)  

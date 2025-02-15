@@ -113,9 +113,15 @@ def login_required(f):
     data['response'] = data['user'] 
     return f(data)
    else:
-    logmsg.sendlog('Lognsa0','warning','system',loggedusers[data['token']]['user'])
+    try:
+        logmsg.sendlog('Lognsa0','warning','system',loggedusers[data['token']]['user'])
+    except:
+        pass
   else:
-   logmsg.sendlog('Lognno0','warning','system',data['token'])
+   try:
+    logmsg.sendlog('Lognno0','warning','system',data['token'])
+   except:
+    pass
   return f({'response':'baduser'})
  return decorated_function
 
@@ -814,6 +820,9 @@ def volumecreate(data):
   data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
 
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
+ elif 'NFS' in data['type']:
+  datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['rootname']+' '+data['rootid']+' '+data['groupname']+' '+data['groupid']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
+
  else:
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['groups']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
  print('#############################')

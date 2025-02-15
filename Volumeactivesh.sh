@@ -56,6 +56,9 @@ then
   then
    sed -i 's/active/disabled/g' /$pDG/exports.$name
    zfs set status:mount=disabled $pDG/$name
+   dockerps=`docker ps | grep -w $ipaddr | awk '{print $1}'`
+   echo -----$dockerps 
+   docker rm -f $dockerps 2>/dev/null
    zfs unmount -f $pDG/$name
   else
    sed -i 's/disabled/active/g' /$pDG/exports.$name*
@@ -66,4 +69,4 @@ then
  /TopStor/etcdput.py $etcd dirty/volume 0     
 fi
  /pace/VolumeCheck.py $leaderip $myhost
- docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq

@@ -1,0 +1,60 @@
+#!/bin/sh
+cd /TopStor
+echo $@ > /root/VolumeDeleteNFS
+export ETCDCTL_API=3
+datenow=`date +%m/%d/%Y`; timenow=`date +%T`;
+volname=`echo $@ | awk '{print $3}'`;
+leaderip=`echo $@ | awk '{print $1}'`;
+pDG=`echo $@ | awk '{print $2}'`;
+pro=`echo $@ | awk '{print $4}'`;
+userreq=` echo $@ | awk '{print $5}'`;
+DG=`echo $pDG `;
+privilege='CIFS';
+contrun=`./privthis.sh $privilege $userreq`;
+if [[ $contrun == 'true' ]]
+then
+	myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternode`
+	myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+	leader=`docker exec etcdclient /TopStor/etcdgetlocal.py leader`
+	echo $leader | grep $myhost
+	if [ $? -ne 0 ];
+	then
+ 		etcd=$myhostip
+	else
+ 		etcd=$leaderip
+ 	fi
+
+ echo $@ > /root/VolumeDestroy
+ docker exec etcdclient /TopStor/logmsg.py NFS1000 info $userreq $volname
+ rm -f /TopStordata/exportip.${volname}*
+ #/TopStor/nfs.sh
+ exportfs -r 
+ volip=`zfs get ip:addr $DG/$volname -H -ovalue`
+ volsubnet=`zfs get ip:subnet $DG/$volname -H -ovalue`
+ /sbin/zfs destroy -r $DG/$volname
+ if [ $? -ne 0  ]; then
+  docker exec etcdclient /TopStor/logmsg.py NFS1001 error $userreq $volname
+ else 
+  /pace/etcddel.py $leaderip volumes $volname
+  allips=`/pace/etcdget.py $leaderip volumes`
+  echo $allips | grep $volip
+  if [ $? -ne 0 ];
+  then
+   	nmcli conn mod cmynode -ipv4.addresses ${volip}/$volsubnet
+  	nmcli conn up cmynode
+  fi
+  stamp=`date +%s`
+  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request volumes_$stamp
+  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request/$leader volumes_$stamp
+  #/pace/delbroadcastlocal.py volumes $volname
+  /TopStor/SnapShotPeriodDelete $leaderip $volname $userreq
+  docker exec etcdclient /TopStor/logmsg.py NFS1002 info $userreq $volname
+  rm -rf /$DG/exports.$volname
+    
+ fi
+ rm -rf /$DG/exports.$volname
+fi
+echo $perfmon | grep 1
+if [ $? -eq 0 ]; then
+ docker exec etcdclient /TopStor/logqueue.py VolumeDeleteNFS stop system 
+fi

@@ -15,14 +15,11 @@ else
 fi
 pDG=`echo $@ | awk '{print $2}'`;
 quota=`echo $@ | awk '{print $4}'`;
-rootname=`echo $@ | awk '{print $5}'`;
-rootid=`echo $@ | awk '{print $6}'`;
-groupname=`echo $@ | awk '{print $7}'`;
-groupid=`echo $@ | awk '{print $8}'`;
-ipaddr=`echo $@ | awk '{print $9}'`;
-ipsubnet=`echo $@ | awk '{print $10}'`;
-active=`echo $@ | awk '{print $11}'`;
-userreq=` echo $@ | awk '{print $12}'`;
+writev=`echo $@ | awk '{print $5}'`;
+ipaddr=`echo $@ | awk '{print $6}'`;
+ipsubnet=`echo $@ | awk '{print $7}'`;
+active=`echo $@ | awk '{print $8}'`;
+userreq=` echo $@ | awk '{print $9}'`;
 DG=`echo $pDG `;
 hostnam=`echo $pDG`;
 #sshost=`cat $runningpools | grep $hostnam | awk '{print $1}'`;
@@ -77,14 +74,14 @@ then
 
  who=$oct1'.'$oct2'.'$oct3'.*'
  who='*'
- ETCDCTL_API=3 /pace/etcdput.py $leaderip volumes/NFS/$myhost/$DG/$name $DG/$name/$who/rw/sync/insecure/no_root_squash/no_all_squash/u_${rootname}_g_/$ipaddr/$ipsubnet/$active
- #ETCDCTL_API=3 /pace/broadcasttolocal.py volumes/NFS/$myhost/$DG/$name $DG/$name/$who/rw/sync/insecure/no_root_squash/no_all_squash/$rootname_$rootid/$ipaddr/$ipsubnet/$active
+ ETCDCTL_API=3 /pace/etcdput.py $leaderip volumes/NFS/$myhost/$DG/$name $DG/$name/$who/rw/sync/insecure/no_root_squash/no_all_squash/$writev/$ipaddr/$ipsubnet/$active
+ #ETCDCTL_API=3 /pace/broadcasttolocal.py volumes/NFS/$myhost/$DG/$name $DG/$name/$who/rw/sync/insecure/no_root_squash/no_all_squash/$writev/$ipaddr/$ipsubnet/$active
  ls /$DG/ | grep $name
  if [ $? -ne 0 ];
  then
   docker exec etcdclient /TopStor/logmsg.py NFS1005 error  $userreq $name
  else 
-  l=$DG'/'$name'/'$who'/rw/sync/insecure/no_root_squash/no_all_squash/_u_'$rootname':'$rootid'_u_'$groupname':'$groupid'_u_/'$ipaddr'/'$ipsubnet'/'$active
+  l=$DG'/'$name'/'$who'/rw/sync/insecure/no_root_squash/no_all_squash/'$writev'/'$ipaddr'/'$ipsubnet'/'$active
   stamp=`date +%s`
   ETCDCTL_API=3 /pace/etcdput.py $leaderip volumes/NFS/$myhost/$DG/$name $l
   ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request volumes_$stamp
@@ -96,11 +93,9 @@ then
  fi;
  /TopStor/SnapshotCreateHourlytrend $leaderip $DG $name 0 24 7 system 
  #/TopStor/VolumeActivateNFS $leaderip vol=$name user=$userreq
- #echo /TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
- echo /pace/VolumeCheck.py $leaderip $myhost
- /pace/VolumeCheck.py $leaderip $myhost
- #/TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
- #chmod a+w /$DG/$name -R
+ echo /TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
+ /TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
+ chmod a+w /$DG/$name -R
  /pace/putzpool.py $leaderip  
 fi
 
