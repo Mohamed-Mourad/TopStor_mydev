@@ -194,6 +194,16 @@ def home():
     return '''<h1>Distant Reading Archive</h1>
 <p>A prototype API for distant reading of science fiction novels.</p>'''
 
+def gettenants():
+ global leaderip
+ vols = get('vol','/NFS/')
+ volinfo = []
+ pid = 0
+ for vol in vols:
+  volinfo.append({'id':pid, 'pool': vol[0].split('/')[3], 'text':vol[0].split('/')[4]})
+  pid += 1
+ return volinfo
+
 def getpools():
  global pooldict, leaderip
  pools = get('pools/','--prefix')
@@ -494,6 +504,15 @@ def volumeslist(data):
   volumes.append({'id':vid, 'text':vol.split('_')[0], 'fullname':vol,'pool':allinfo['volumes'][vol]['pool']})
   vid += 1
  return jsonify(volumes)
+
+@app.route('/api/v1/tenants/tenantinfo', methods=['GET','POST'])
+@login_required
+def tenantsinfo(data):
+ if 'baduser' in data['response']:
+      return {'response': 'baduser'}
+ alltenants = gettenants()
+ alltenants.append({'id':len(allpools), 'text':'Cluster'})
+ return jsonify({'results':alltenants})
 
 
 
