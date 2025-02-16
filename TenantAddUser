@@ -1,0 +1,23 @@
+#!/bin/bash
+echo $@ > /root/unixadduser
+export ETCDCTL_API=3
+cd /TopStor
+userreq=`echo $@  | awk '{print $1}'`;
+container=`echo $@  | awk '{print $2}'`;
+username=`echo $@ | awk '{print $3}'`;
+userid=`echo $@ | awk '{print $4}'`;
+docker exec etcdclient /TopStor/logmsg.py Tenantst01 info $userreq $username $container 
+docker ps | grep $container
+if [ $? -ne 0 ];
+then
+	docker exec etcdclient /TopStor/logmsg.py Tenantfa01 error $userreq $username $container 
+	exit
+fi
+docker exec $container adduser $username -H -D -s /sbin/nologin -u $userid
+docker exec $container cat /etc/passwd | grep $username
+if [ $? -eq 0 ];
+then	
+	docker exec etcdclient /TopStor/logmsg.py Tenantsu01 info $userreq $username $container 
+else
+	docker exec etcdclient /TopStor/logmsg.py Tenantfa01 error $userreq $username $container 
+fi

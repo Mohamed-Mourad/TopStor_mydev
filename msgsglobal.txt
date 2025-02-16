@@ -170,6 +170,9 @@ CIFS1004: Success creating volume :
 CIFS1005: Deleting : .....
 CIFS1006: Prolbem deleting :
 CIFS1007: Success deleting :
+Tenantst01:2: : from :: Start adding user : to the tenant : 
+Tenantsu01:2: : from :: Success adding user : to the tenant : 
+Tenantfa01:2: : from :: Failed adding  user : to the tenant : 
 Unmoutst01:1: : from :: Start process to let the volume : be : 
 Unmoutfa01:1: : from :: failed to let the volume : be :
 Unmoutsu01:1: : from :: The volume : is now :

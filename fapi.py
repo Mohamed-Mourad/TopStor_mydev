@@ -30,7 +30,7 @@ from time import sleep
 
 getalltimestamp = 0
 os.environ['ETCDCTL_API'] = '3'
-loggedusers = {}
+loggedusers = dict() 
 alldsks = []
 allpools = 0
 allgroups = []
@@ -100,9 +100,12 @@ def getalltime(renew='no'):
   allinfo = deepcopy(getall(leaderip, alldsks))
   getalltimestamp = timestamp()
  return
+
 def login_required(f):
+ global loggedusers
  @wraps(f)
  def decorated_function(*args, **kwargs):
+  global loggedusers
   data = request.args.to_dict()
   for dat in data:
     data[dat] = data[dat].replace(' ','')
@@ -115,14 +118,15 @@ def login_required(f):
    else:
     try:
         logmsg.sendlog('Lognsa0','warning','system',loggedusers[data['token']]['user'])
+        return f({'response':'baduser'})
     except:
-        pass
+        return f({'response':'baduser'})
   else:
    try:
-    logmsg.sendlog('Lognno0','warning','system',data['token'])
+    logmsg.sendlog('Lognno0','warning','system1',data['token'])
+    return f({'response':'baduser'})
    except:
-    pass
-  return f({'response':'baduser'})
+    return f({'response':'baduser'})
  return decorated_function
 
 @app.route('/api/v1/users/uploadUsers', methods=['GET','POST'])
@@ -200,6 +204,8 @@ def gettenants():
  volinfo = []
  pid = 0
  for vol in vols:
+  if 'active' not in vol[1]:
+    continue
   volinfo.append({'id':pid, 'pool': vol[0].split('/')[3], 'text':vol[0].split('/')[4]})
   pid += 1
  return volinfo
@@ -858,8 +864,8 @@ def getlogin(token):
  global leaderip
  logindata = get('login',token)[0]
  if logindata == '_1':
-  logmsg.sendlog('Lognno0','warning','system',token)
-  return 'baduser'
+  logmsg.sendlog('Lognno0','warning','system2',token)
+  return {'response':'baduser'}
  oldtimestamp = logindata[1].split('/')[1]
  user = logindata[0].split('/')[1]
  if int(oldtimestamp) < int(timestamp()):
@@ -1241,6 +1247,24 @@ def AddPartner(data):
  cmdstring = '/TopStor/PartnerAdd.py '+data['ip']+' '+data['alias']+' '+data['type']+' '+data['port']+' '+data['pass']+' '+data['user'] + ' init'
  postchange(cmdstring)
  return data
+
+
+@app.route('/api/v1/tenant/adduser', methods=['GET','POST'])
+@login_required
+def TenantAddUser(data):
+ global allgroups, leaderip
+ if 'baduser' in data['response']:
+  return {'response': 'baduser'}
+ volinfo = get('vol',data['tenant'])[0]
+ if 'NFS' in volinfo[0]:
+    owner = volinfo[0].split('/')[2]
+    container = 'NFS-'+volinfo[1].split('/')[9]
+    cmndstring = '/TopStor/TenantAddUser '+data['response']+' '+container+' '+data['name']+' '+data['userid']
+ postchange(cmndstring,owner)
+ return data
+ 
+
+
 
 @app.route('/api/v1/users/UnixAddUser', methods=['GET','POST'])
 @login_required
