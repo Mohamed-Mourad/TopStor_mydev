@@ -1258,8 +1258,8 @@ def TenantAddUser(data):
  volinfo = get('vol',data['tenant'])[0]
  if 'NFS' in volinfo[0]:
     owner = volinfo[0].split('/')[2]
-    container = 'NFS-'+volinfo[1].split('/')[9]
-    cmndstring = '/TopStor/TenantAddUser '+data['response']+' '+container+' '+data['name']+' '+data['userid']
+    pool = volinfo[0].split('/')[3]
+    cmndstring = '/TopStor/TenantAddUser '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']
  postchange(cmndstring,owner)
  return data
  

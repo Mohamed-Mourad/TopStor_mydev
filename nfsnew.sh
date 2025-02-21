@@ -12,6 +12,8 @@ ipsubnet=`echo $@ | awk '{print $4}'`
 vtype=`echo $@ | awk '{print $5}'`
 share=`echo $@ | awk '{print $6}'`
 writes=`echo $@ | awk '{print $7}'`
+pool='/'`echo $share | awk -F'/' '{print $2}'`
+volume=`echo $share | awk -F'/' '{print $3}'`
 echo params $@ > /root/nfstmp
 echo name $resname >> /root/nfstmp
 echo mounts $mounts >> /root/nfstmp
@@ -22,12 +24,13 @@ echo nmcli conn mod cmynode -ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
 nmcli conn mod cmynode +ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
-
 docker run -d $mounts --rm --privileged \
   		-e "HOSTIP=$ipaddr"  \
 		-e SHARED_DIRECTORY=$share \
   		-p $ipaddr:2049:2049/tcp \
   		-v /TopStor/:/TopStor \
+		-v $pool'/user_'$volume:/etc/passwd:rw \
+		-v $pool'/group_'$volume:/etc/group:rw \
   		--name $resname itsthenetwork/nfs-server-alpine
 counter=100
 while [ $counter -gt 1 ];
@@ -44,7 +47,7 @@ if [ $counter -eq 1 ];
 then
 	docker logs $resname > /root/failedNFScontainer
 else
-
+	
 	writes=${writes#_vol_}
 	while [[ $writes == *_vol_* ]]; do
 		current_volinfo=${writes%%_vol_*}
@@ -57,7 +60,8 @@ else
 		echo $rootname | grep -w root
 		if [ $? -ne 0 ];
 		then
-			docker exec $resname adduser $rootname -H -D -s /sbin/nologin -u $rootid
+			#docker exec $resname adduser $rootname -H -D -s /sbin/nologin -u $rootid
+			echo "$rootname:x:$rootid:$rootid:$rootname:/NoHome:/sbin/nologin" >> $pool'/user_'$volume
 		fi	
 		echo $groupname | grep -w root
 		if [ $? -ne 0 ];
@@ -66,7 +70,8 @@ else
 			echo $groupname | grep -w $rootname
 			if [ $? -ne 0 ];
 			then
-				docker exec $resname addgroup $groupname -g $groupid
+			#	docker exec $resname addgroup $groupname -g $groupid
+				echo $groupname:x:$groupid: >> $pool'/group_'$volume
 			fi
 		fi	
  		docker exec $resname chown $rootname $vol 
