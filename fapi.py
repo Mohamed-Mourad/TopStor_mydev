@@ -1402,7 +1402,7 @@ def api_users_userslist(data):
         if username == '':
             continue
         userid = user.split(':')[1]
-        allusers.append({"name":username, 'id':uid, 'userid':userid, "pool":'na', "size":'na', "groups":'na', 'priv':'na'})
+        allusers.append({"name":username, 'id':uid, 'userid':userid, "pool":'na', "size":'na', "groups":'NoGroup', 'priv':'na'})
         uid += 1
     alldict['allusers'] = allusers
     alldict['allgroups'] = [] 
