@@ -61,6 +61,7 @@ else
 		if [ $? -ne 0 ];
 		then
 			#docker exec $resname adduser $rootname -H -D -s /sbin/nologin -u $rootid
+			sed -i "/$rootname/d" $pool'/user_'$volume
 			echo "$rootname:x:$rootid:$rootid:$rootname:/NoHome:/sbin/nologin" >> $pool'/user_'$volume
 		fi	
 		echo $groupname | grep -w root
@@ -71,6 +72,7 @@ else
 			if [ $? -ne 0 ];
 			then
 			#	docker exec $resname addgroup $groupname -g $groupid
+				sed -i "/$groupname/d" $pool'/user_'$volume
 				echo $groupname:x:$groupid: >> $pool'/group_'$volume
 			fi
 		fi	
