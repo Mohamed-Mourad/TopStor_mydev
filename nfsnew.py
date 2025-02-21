@@ -48,7 +48,7 @@ def create(leader, leaderip, myhost, myhostip, etcdip, pool, name, ipaddr, ipsub
     #    with open('/TopStordata/exportip.'+vol[0].split('/')[4]+'_'+ipaddr,'w') as fip:
     #        fip.write(exports)
      
-    cmdline = '/TopStor/nfsnew.sh '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype+' '+'/'+pool+'/'+leftvol+' '+writes+'_vol_'
+    cmdline = '/TopStor/nfsnew.sh 'leaderip+' '+resname+' '+mounts+' '+ipaddr+' '+ipsubnet+' '+vtype+' '+'/'+pool+'/'+leftvol+' '+writes+'_vol_'
 
     print('second cmdline',cmdline)
     subprocess.run(cmdline.split(),stdout=subprocess.PIPE)  

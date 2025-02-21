@@ -1259,7 +1259,7 @@ def TenantAddUser(data):
  if 'NFS' in volinfo[0]:
     owner = volinfo[0].split('/')[2]
     pool = volinfo[0].split('/')[3]
-    cmndstring = '/TopStor/TenantAddUser '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']
+    cmndstring = '/TopStor/TenantAddUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']
  postchange(cmndstring,owner)
  return data
  
@@ -1390,10 +1390,27 @@ def api_users_userslist(data):
  global allgroups, allusers, leaderip
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
+ if 'tenant' not in data:
+    data['tenant'] = 'Cluster'
+ alldict = dict()
+ allusers = []
+ if 'Cluster' not in data['tenant']:
+    userlst = get('tenant',data['tenant']+'/users')[0][1].split('/')
+    uid=0
+    for user in userlst:
+        username = user.split(':')[0]
+        if username == '':
+            continue
+        userid = user.split(':')[1]
+        allusers.append({"name":username, 'id':uid, 'userid':userid, "pool":'na', "size":'na', "groups":'na', 'priv':'na'})
+        uid += 1
+    alldict['allusers'] = allusers
+    alldict['allgroups'] = [] 
+    alldict['usersnohome'] = [] 
+    return jsonify(alldict)
  userlst = etcdgetjson(leaderip,'usersinfo','--prefix')
  allgroups = getgroups()
  userdict = dict()
- allusers = []
  for group in allgroups:
   groupid = group[1]
   grpusers = group[2].split(',')
@@ -1418,7 +1435,6 @@ def api_users_userslist(data):
   if 'NoHome' in userpool:
    usersnohome.append({ 'id':nohomeid, 'text': username })
    nohomeid += 1 
- alldict = dict()
  alldict['allusers'] = allusers
  alldict['allgroups'] = allgroups
  alldict['usersnohome'] = usersnohome

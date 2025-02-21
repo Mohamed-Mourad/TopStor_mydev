@@ -14,6 +14,7 @@ then
 	docker exec etcdclient /TopStor/logmsg.py Tenantfa01 error $userreq $username $volume 
 	exit
 fi
+sed -i "/$rootname/d" $pool'/user_'$volume
 echo "$rootname:x:$rootid:$rootid:$rootname:/NoHome:/sbin/nologin" >> $pool'/user_'$volume
 #docker exec $container adduser $username -H -D -s /sbin/nologin -u $userid
 docker exec $container cat /etc/passwd | grep $username
@@ -23,3 +24,4 @@ then
 else
 	docker exec etcdclient /TopStor/logmsg.py Tenantfa01 error $userreq $username $volume 
 fi
+/TopStor/TenantUserList $leaderip $volume $pool

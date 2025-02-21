@@ -5,13 +5,15 @@ export ETCDCTL_API=3
 echo $@ > /root/nfshtmp
 echo I am here
 echo param= $@
-resname=`echo $@ | awk '{print $1}'`
-mounts=`echo $@ | awk '{print $2}' | sed 's/\-v/ \-v /g'`
-ipaddr=`echo $@ | awk '{print $3}'`
-ipsubnet=`echo $@ | awk '{print $4}'`
-vtype=`echo $@ | awk '{print $5}'`
-share=`echo $@ | awk '{print $6}'`
-writes=`echo $@ | awk '{print $7}'`
+
+leaderip=`echo $@ | awk '{print $1}'`
+resname=`echo $@ | awk '{print $2}'`
+mounts=`echo $@ | awk '{print $3}' | sed 's/\-v/ \-v /g'`
+ipaddr=`echo $@ | awk '{print $4}'`
+ipsubnet=`echo $@ | awk '{print $5}'`
+vtype=`echo $@ | awk '{print $6}'`
+share=`echo $@ | awk '{print $7}'`
+writes=`echo $@ | awk '{print $8}'`
 pool='/'`echo $share | awk -F'/' '{print $2}'`
 volume=`echo $share | awk -F'/' '{print $3}'`
 echo params $@ > /root/nfstmp
@@ -67,12 +69,11 @@ else
 		echo $groupname | grep -w root
 		if [ $? -ne 0 ];
 		then
-			echo hhhhhhhhh
 			echo $groupname | grep -w $rootname
 			if [ $? -ne 0 ];
 			then
 			#	docker exec $resname addgroup $groupname -g $groupid
-				sed -i "/$groupname/d" $pool'/user_'$volume
+				sed -i "/$groupname/d" $pool'/group_'$volume
 				echo $groupname:x:$groupid: >> $pool'/group_'$volume
 			fi
 		fi	
@@ -82,5 +83,10 @@ else
  		docker exec $resname chmod g+s $vol 
  		docker exec $resname chmod u+s $vol 
 		writes=${writes#*_vol_}
+
+		/TopStor/TenantUserList $leaderip $volume $pool
+		
 	done
+# Step 1: Extract the list of usernames and IDs after the user "rpc"
+
 fi
