@@ -17,7 +17,7 @@ then
 else
 	etcdip=$myhostip
 fi
-cujobs=(`echo iscsiwatchdoglooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper`)
+cujobs=(`echo iscsiwatchdoglooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper volumechecklooper`)
 declare  -A cmdcjobs
 cmdcjobs['iscsiwatchdog']="/TopStor/iscsiwatchdog.sh" 
 cmdcjobs['iscsiwatchdoglooper']="/TopStor/iscsiwatchdoglooper.sh" 
@@ -26,6 +26,7 @@ cmdcjobs['topstorrecvreply']="echo"
 cmdcjobs['receivereplylooper']="/TopStor/receivereplylooper.sh"
 cmdcjobs['syncrequestlooper']="/pace/syncrequestlooper.sh"
 cmdcjobs['selectsparelooper']="/pace/selectsparelooper.sh"
+cmdcjobs['volumechecklooper']="/pace/VolumeChecklooper.sh"
 cmdcjobs['checksyncs']="echo"
 
 while true;

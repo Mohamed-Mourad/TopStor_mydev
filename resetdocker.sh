@@ -14,6 +14,8 @@ pkill topstorrecvrep
 pkill fapilooper
 pkill syncrequestlooper
 pkill checksyncs
+pkill VolumeChecklooper
+pkill VllumeCheck
 #zpool export -a
 targetcli clearconfig 
 systemctl stop rabbitmq-server

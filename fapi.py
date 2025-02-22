@@ -1391,7 +1391,7 @@ def api_users_userslist(data):
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
  if 'tenant' not in data:
-    data['tenant'] = 'Cluster'
+    data['tenant'] = 'nothing'
  alldict = dict()
  allusers = []
  if 'Cluster' not in data['tenant']:
