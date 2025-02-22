@@ -1196,7 +1196,7 @@ def partnerdel(data):
 def userdel(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
- if data['tenant'] != 'Cluster':
+ if data['tenant'] == 'Cluster':
     cmndstring = '/TopStor/UnixDelUser '+leaderip+' '+data.get('name')+' '+data['user']
     postchange(cmndstring)
  else:
@@ -1262,7 +1262,10 @@ def TenantAddUser(data):
  if 'NFS' in volinfo[0]:
     owner = volinfo[0].split('/')[2]
     pool = volinfo[0].split('/')[3]
-    cmndstring = '/TopStor/TenantAddUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']
+    grp = data['groups']
+    if len(grp) < 3:
+        grp = 'NoGroup'
+    cmndstring = '/TopStor/TenantAddUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']+' '+grp
  postchange(cmndstring,owner)
  return data
  
@@ -1410,16 +1413,23 @@ def api_users_userslist(data):
  allusers = []
  if 'Cluster' not in data['tenant']:
     userlst = get('tenant',data['tenant']+'/users')[0][1].split('/')
+    grplst = get('tenant',data['tenant']+'/group')[0][1].split('/')[1]
+    grpusrs = grplst.split(':')[-1]
+    group = grplst.split(':')[0]
     uid=0
     for user in userlst:
         username = user.split(':')[0]
         if username == '':
             continue
         userid = user.split(':')[1]
-        allusers.append({"name":username, 'id':uid, 'userid':userid, "pool":'na', "size":'na', "groups":'NoGroup', 'priv':'na'})
+        if username in grplst:
+            grp = [0] 
+        else:
+            grp = 'NoGroup'
+        allusers.append({"name":username, 'id':uid, 'userid':userid, "pool":'na', "size":'na', "groups":grp, 'priv':'na'})
         uid += 1
     alldict['allusers'] = allusers
-    alldict['allgroups'] = [] 
+    alldict['allgroups'] = [[group,0,grpusrs]]
     alldict['usersnohome'] = [] 
     return jsonify(alldict)
  userlst = etcdgetjson(leaderip,'usersinfo','--prefix')
