@@ -173,6 +173,9 @@ CIFS1007: Success deleting :
 Tenantst01:2: : from :: Start adding user : to the tenant : 
 Tenantsu01:2: : from :: Success adding user : to the tenant : 
 Tenantfa01:2: : from :: Failed adding  user : to the tenant : 
+Tenantst02:2: : from :: Start deleting user : to the tenant : 
+Tenantsu02:2: : from :: Success deleting user : to the tenant : 
+Tenantfa02:2: : from :: Failed deleting  user : to the tenant : 
 Unmoutst01:1: : from :: Start process to let the volume : be : 
 Unmoutfa01:1: : from :: failed to let the volume : be :
 Unmoutsu01:1: : from :: The volume : is now :

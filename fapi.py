@@ -1196,8 +1196,11 @@ def partnerdel(data):
 def userdel(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
- cmndstring = '/TopStor/UnixDelUser '+leaderip+' '+data.get('name')+' '+data['user']
- postchange(cmndstring)
+ if data['tenant'] != 'Cluster':
+    cmndstring = '/TopStor/UnixDelUser '+leaderip+' '+data.get('name')+' '+data['user']
+    postchange(cmndstring)
+ else:
+    TenantDelUser(data)
  return data
 
 @app.route('/api/v1/groups/UnixAddgroup', methods=['GET','POST'])
@@ -1263,6 +1266,17 @@ def TenantAddUser(data):
  postchange(cmndstring,owner)
  return data
  
+def TenantDelUser(data):
+ global allgroups, leaderip
+ if 'baduser' in data['response']:
+  return {'response': 'baduser'}
+ volinfo = get('vol',data['tenant'])[0]
+ if 'NFS' in volinfo[0]:
+    owner = volinfo[0].split('/')[2]
+    pool = volinfo[0].split('/')[3]
+    cmndstring = '/TopStor/TenantDelUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']
+ postchange(cmndstring,owner)
+ return data
 
 
 
@@ -1391,7 +1405,7 @@ def api_users_userslist(data):
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
  if 'tenant' not in data:
-    data['tenant'] = 'nothing'
+    data['tenant'] = 'Cluster'
  alldict = dict()
  allusers = []
  if 'Cluster' not in data['tenant']:

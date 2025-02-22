@@ -14,9 +14,8 @@ then
 	docker exec etcdclient /TopStor/logmsg.py Tenantfa01 error $userreq $username $volume 
 	exit
 fi
-sed -i "/$rootname/d" $pool'/user_'$volume
-echo "$rootname:x:$rootid:$rootid:$rootname:/NoHome:/sbin/nologin" >> $pool'/user_'$volume
-#docker exec $container adduser $username -H -D -s /sbin/nologin -u $userid
+sed -i "/$username/d" $pool'/user_'$volume
+echo "$username:x:$userid:$userid:$username:/NoHome:/sbin/nologin" >> $pool'/user_'$volume
 docker exec $container cat /etc/passwd | grep $username
 if [ $? -eq 0 ];
 then	
