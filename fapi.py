@@ -682,6 +682,16 @@ def userchange(data):
   return {'response': 'baduser'}
  grps = data.get('groups')
  groupstr = ''
+ if 'Cluster' not in data['tenant']:
+     volinfo = get('vol',data['tenant'])[0]
+     if 'NFS' in volinfo[0]:
+        owner = volinfo[0].split('/')[2]
+        pool = volinfo[0].split('/')[3]
+        if len(grps) < 3:
+            grps = 'NoGroup'
+     cmndstring = '/TopStor/TenantChangeUser '+leaderip+' '+data['name']+' groups'+grps+' '+pool+' '+data['tenant']+' '+data['response']
+     postchange(cmndstring,owner)
+     return data
  allgroups = getgroups()
  if len(grps) < 1:
   groupstr = 'NoGroup'
@@ -692,6 +702,7 @@ def userchange(data):
  cmndstring = '/TopStor/UnixChangeUser '+leaderip+' '+data.get('name')+' groups'+groupstr+' '+data['user']+' '+'change'
  postchange(cmndstring)
  return data
+
 
  
 @app.route('/api/v1/info/onedaylog', methods=['GET','POST'])

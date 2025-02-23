@@ -1,0 +1,25 @@
+#!/bin/bash
+echo $@ > /root/unixdeluser
+export ETCDCTL_API=3
+cd /TopStor
+
+leaderip=`echo $@  | awk '{print $1}'`;
+username=`echo $@ | awk '{print $2}'`;
+grps=`echo $@  | awk '{print $3}' | awk -F'groups' '{print $2}'`;
+pool=`echo $@  | awk '{print $4}'`;
+volume=`echo $@  | awk '{print $5}'`;
+userreq=`echo $@  | awk '{print $6}'`;
+
+docker exec etcdclient /TopStor/logmsg.py Tenantst03 info $userreq $username $volume 
+sed -i "s/,$username//g" /$pool'/group_'$volume
+sed -i "s/:$username/:/g" /$pool'/group_'$volume
+echo group$grps | grep 'NoGroup'
+if [ $? -ne 0 ];
+then
+	sed -i "/^${grps}:/s/$/,${username}/" /$pool'/group_'$volume
+fi
+
+sed -i "s/:,/:/g" /$pool'/group_'$volume
+
+docker exec etcdclient /TopStor/logmsg.py Tenantsu03 info $userreq $username $volume 
+/TopStor/TenantUserList $leaderip $volume $pool
