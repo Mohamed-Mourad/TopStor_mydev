@@ -9,6 +9,9 @@ volume=`echo $@  | awk '{print $4}'`;
 username=`echo $@ | awk '{print $5}'`;
 docker exec etcdclient /TopStor/logmsg.py Tenantst02 info $userreq $username $volume 
 sed -i "/$username/d" /$pool'/user_'$volume
+sed -i "s/,$username//g" /$pool'/group_'$volume
+sed -i "s/:$username/:/g" /$pool'/group_'$volume
+sed -i  "/$username/d" /$pool'/group_'$volume
 docker exec $container cat /etc/passwd | grep $username
 if [ $? -ne 0 ];
 then	

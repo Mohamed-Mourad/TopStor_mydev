@@ -1483,10 +1483,15 @@ def api_users_grouplist(data):
  global allgroups
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
- allgroups = getgroups()
  grp = []
- for group in allgroups:
-  grp.append({'id':group[1],'text':group[0]})
+ if 'Cluster' not in data['tenant']:
+    allgroups = [get('tenant',data['tenant']+'/group')[0][1].split('/')[1].split(':')[0]]
+    for group in allgroups:
+        grp.append({'id':0,'text':group})
+ else:
+    allgroups = getgroups()
+    for group in allgroups:
+        grp.append({'id':group[1],'text':group[0]})
  return jsonify({'results':grp})
 
 
