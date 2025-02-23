@@ -72,9 +72,13 @@ else
 			echo $groupname | grep -w $rootname
 			if [ $? -ne 0 ];
 			then
-			#	docker exec $resname addgroup $groupname -g $groupid
-				sed -i "/$groupname/d" $pool'/group_'$volume
-				echo $groupname:x:$groupid: >> $pool'/group_'$volume
+				cat $pool'/group_'$volume | grep -w $groupname
+				if [ $? -ne 0 ];
+				then
+			#		docker exec $resname addgroup $groupname -g $groupid
+					#sed -i "/$groupname/d" $pool'/group_'$volume
+					echo $groupname:x:$groupid: >> $pool'/group_'$volume
+				fi
 			fi
 		fi	
  		docker exec $resname chown $rootname $vol 
