@@ -267,7 +267,7 @@ def versions(data):
 def swapply(data):
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
- cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]
+ cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]+' '+data['response']
  postchange(cmdline)
  versionlst = versions(data)
  return versionlst
