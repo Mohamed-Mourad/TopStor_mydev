@@ -46,10 +46,9 @@ do
 			exit
 		fi
 		git remote -v | grep indevice
-		if [ $? -ne 0 ];
-t		then
-			git remote add indevice /${job}.bak/$job
-		fi
+		bakpath='/'${job}'.bak/'$job
+		echo git remote add indevice $bakpath 
+		git remote add indevice $bakpath 
 		fnupdate $branch 
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$job//g" `)
   	done

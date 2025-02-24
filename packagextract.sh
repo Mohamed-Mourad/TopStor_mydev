@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cd /TopStor
 # Input file containing the compressed and encrypted data
 input_file="/TopStordata/output.tar.gz.enc"
 
