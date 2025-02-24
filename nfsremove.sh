@@ -21,6 +21,8 @@ rm -rf /TopStor/exports.${vol}
 echo vol = $vol
 resname=$vtype'-'$volip
 docker  rm -f $resname 
+rm -rf /$pool/user_$vol
+rm -rf /$pool/group_$vol
 /TopStor/etcddel.py $leaderip vol $vol 
 /TopStor/etcddel.py $leaderip replivol $vol
 nmcli conn mod cmynode -ipv4.addresses $volip 
