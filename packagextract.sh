@@ -20,3 +20,4 @@ done
 rm -rf $temp_tar
 
 echo "All directories have been processed."
+/TopStor/indevicepull.sh
