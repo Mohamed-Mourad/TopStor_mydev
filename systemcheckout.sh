@@ -17,6 +17,10 @@ fnupdate () {
 }
 cjobs=(`echo TopStor pace topstorweb`)
 echo $@ > /root/changeversion
+branch=`echo $@ | awk '{print $1}'`
+userreq=`echo $@ | awk '{print $2}'`
+docker exec etcdclient /TopStor/logmsg.py FWst01 info $userreq $branch
+
 branch=$1
 branchc=`echo $branch | wc -c`
 if [ $branchc -le 3 ];
@@ -60,3 +64,4 @@ cd /Test_TopStor
 git show | grep commit
 cd /TopStor
 echo finished
+docker exec etcdclient /TopStor/logmsg.py FWsu01 info $userreq $branch

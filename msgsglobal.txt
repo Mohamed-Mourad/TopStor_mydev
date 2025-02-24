@@ -28,6 +28,8 @@ Dist8:0: : from :: Start offlining disk : Please add a spare disk urgently.
 Dist9:0: : from :: Offlining disk : failed
 Dist10:0: : from :: Start onlining disk :.
 Dist11:0: : from :: Onlining disk : failed. 
+FWst01:0: : from :: Start changing to software version : in this system. 
+FWsu01:0: : from :: finish changing to software version : in this system. 
 Sys01:0: : from :: the host : is registered in the system.
 Sys02:0: : from :: the host : is removed from the system.
 Sys03:0: : from :: the pool : is registered in the system.
