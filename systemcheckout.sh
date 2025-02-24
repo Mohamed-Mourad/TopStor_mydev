@@ -15,7 +15,8 @@ fnupdate () {
 	sync
 	sync
 }
-cjobs=(`echo Test_TopStor Test_pace Test_topstorweb`)
+cjobs=(`echo TopStor pace topstorweb`)
+echo $@ > /root/changeversion
 branch=$1
 branchc=`echo $branch | wc -c`
 if [ $branchc -le 3 ];

@@ -269,8 +269,8 @@ def swapply(data):
       return {'response': 'baduser'}
  cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]
  postchange(cmdline)
- versions = versions(data)
- return versions
+ versionlst = versions(data)
+ return versionlst
 
 
 #@app.route('/api/v1/hosts/info', methods=['GET','POST'])
