@@ -47,14 +47,14 @@ then
  if [ $? -eq 0 ];
  then
   docker exec etcdclient /TopStor/logmsg.py Unlin1021vv warning $userreq $shortname
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop_canceled $userreq 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq 
   exit
  fi
  /pace/etcdget.py $etcd usersinfo --prefix | grep $shortname
  if [ $? -eq 0 ];
  then
   docker exec etcdclient /TopStor/logmsg.py Unlin1021vu warning $userreq $name
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop_canceled $userreq 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish  $userreq 
   exit
  fi
  oldname=` /sbin/zfs list | grep "$shortname" `;
