@@ -41,19 +41,19 @@ then
  		etcd=$leaderip
  	fi
 
-	docker exec etcdclient /TopStor/logqueue.py VolumeCreateCIFS running $userreq 
+	docker exec etcdclient /TopStor/logqueue.py VolumeCreateCIFS start $userreq 
  /pace/etcdget.py $etcd volumes --prefix | grep $shortname
  if [ $? -eq 0 ];
  then
   docker exec etcdclient /TopStor/logmsg.py Unlin1021vv warning $userreq $shortname
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop_canceled $userreq 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq 
   exit
  fi
  /pace/etcdget.py $etcd usersinfo --prefix | grep $shortname
  if [ $? -eq 0 ];
  then
   docker exec etcdclient /TopStor/logmsg.py Unlin1021vu warning $userreq $name
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop_canceled $userreq 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq 
   exit
  fi
  echo privileged $name >> /root/volcreate
@@ -72,7 +72,7 @@ then
  then
   echo here5 
   docker exec etcdclient /TopStor/logmsg.py NFS1006 error $userreq $DG/$name
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq 
   exit
  fi
  /sbin/zfs set prot:kind=CIFS $DG/$name
@@ -129,4 +129,4 @@ then
  docker exec etcdclient /TopStor/logmsg.py NFS1007 info $userreq $DG/$name
 fi
  docker exec etcdclient /TopStor/logqueue.py VolumeCreateCIFS finish $userreq 
- docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq 
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq 
