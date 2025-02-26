@@ -34,7 +34,7 @@ docker run -d $mounts --rm --privileged \
 		-v $pool'/user_'$volume:/etc/passwd:rw \
 		-v $pool'/group_'$volume:/etc/group:rw \
   		--name $resname itsthenetwork/nfs-server-alpine
-counter=100
+counter=20
 while [ $counter -gt 1 ];
 do
 	counter=$((counter-1))
