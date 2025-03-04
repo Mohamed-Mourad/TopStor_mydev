@@ -24,6 +24,7 @@ docker rm -f $resname
 nmcli conn mod cmynode -ipv4.addresses ${ipaddr}/$ipsubnet
 echo nmcli conn mod cmynode -ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
+flag=0
 nmcli conn mod cmynode +ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
 docker run -d $mounts --rm --privileged \
