@@ -833,7 +833,11 @@ def volumecreate(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  datastr = ''
- isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],data['type']))+int(is_unique_name(data['name']))
+ if 'NFS' in data['type']:
+    datatype='ANYthing'
+ else:
+    datatype=data['type']
+ isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
  if isvu == 0:
     print('ip is valid')
  else:
@@ -945,6 +949,26 @@ def volumeconfig(data):
  getalltime()
  volume = allinfo['volumes'][data['volume']]
  owner = volume['host']
+ if 'ipaddress' not in data:
+   data['ipaddress'] = volume['ipaddress']
+ else:
+    if 'NFS' in volume['prot']:
+        datatype='ANYthing'
+    else:
+        datatype=volume['prot']
+
+    if data['ipaddress'] != volume['ipaddress']:
+        isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
+        if isvu == 0:
+            print('ip is valid')
+        else:
+            if isvu < 100:
+                logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
+            elif isvu > 10 and isvu < 120: 
+                logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
+            else:
+                logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+            return data
  if owner == leader:
   ownerip = leaderip
  else:
@@ -954,21 +978,6 @@ def volumeconfig(data):
  if 'ISCSI' in data['type']:
   data['chapuser']='MoatazNegm'
   data['chappas']='MezoAdmin'
-  if 'ipaddress' not in data:
-   data['ipaddress'] = volume['ipaddress']
-  else:
-    isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],volume['prot']))
-    if isvu == 0:
-        print('ip is valid')
-    else:
-        if isvu < 100:
-            logmsg.sendlog('IPaddrfa','error','system',loggedusers[data['token']]['user'])
-        elif isvu > 10 and isvu < 120: 
-            logmsg.sendlog('IPadduqfa','error','system',loggedusers[data['token']]['user'])
-        else:
-            logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
-        return data
-
   if 'initiators' not in data:
    data['initiators'] = volume['initiators']
   if 'portalport' not in data:
