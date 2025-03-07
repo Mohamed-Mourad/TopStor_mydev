@@ -19,8 +19,11 @@ def getversions():
  cversion = result.split('\n')[0].split('branch ')[1]
  id = 1 
  for version in allbranches:
-   versions.append({'id': id, 'text':version})
-   id += 1
+   if len(version)< 5:
+    continue
+   if float(version.split('QSD')[1].split(',')[0]) > 3.7:
+    versions.append({'id': id, 'text':version})
+    id += 1
  verdict = { 'versions': versions, 'current': cversion } 
  print(verdict)
  return verdict 

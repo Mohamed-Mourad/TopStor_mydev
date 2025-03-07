@@ -91,10 +91,10 @@ if __name__=='__main__':
  vols = volumes(allinfo['volumes'])
  #statsvol(vols)
  res = dskperf(leaderip)
- print(res)
+ print('dskperf',res)
  res = cpuperf(leaderip)
- print(res)
+ print('cpuprf',res)
  res = allvolstats(leaderip, allinfo)
- print(res)
+ print('allvolstats',res)
  
  
