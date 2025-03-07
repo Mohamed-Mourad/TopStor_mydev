@@ -8,28 +8,33 @@ data2dev='enp0s8'
 #hostname localhost
 #echo localhost > /etc/hostname
 
+systemctl stop rabbitmq-server
 pkill iscsiwatchdog
 pkill zfsping 
-pkill topstorrecvrep
+pkill receive
+pkill topstorrecvreply
 pkill fapilooper
 pkill syncrequestlooper
 pkill checksyncs
 pkill VolumeChecklooper
-pkill VllumeCheck
+pkill VolumeCheck
+pkill heartbeat
+pkill refresh
+pkill rebootme 
+pkill selects
+pkill syncreq
+pkill send
 #zpool export -a
-targetcli clearconfig 
-systemctl stop rabbitmq-server
+targetcli clearconfig confirm=True
+dockers=$(docker ps -q)
+echo dockers=$dockers
+for doc in $dockers;
+do
+	docker stop $doc
+done
 
-#nmcli conn delete mynode
-#nmcli conn delete mycluster
-docker stop intdns
-docker stop etcd
-docker stop httpd
-docker stop httpd_local
-docker stop flask
-docker stop etcdclient 
-docker stop rmq 
-docker stop wetty 
 systemctl stop docker
 systemctl stop iscsid 
 systemctl stop target 
+#nmcli conn delete mynode
+#nmcli conn delete mycluster

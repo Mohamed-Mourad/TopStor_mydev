@@ -191,10 +191,10 @@ then
 	fi
 	nmcli conn delete mynode
 	nmcli conn add con-name mynode type ethernet ifname $mynodedev ip4 $mynode
+	nmcli conn mynode up
 	nmcli conn delete clusterstub
 	nmcli conn add con-name clusterstub type ethernet ifname $myclusterdev ip4 169.168.12.12 
 	#nmcli conn up clusterstub 
-
 
 	ping -w 3 10.11.11.250
 	if [ $? -ne 0 ];
@@ -349,22 +349,11 @@ echo starting etcdclient
 docker run -itd --rm --name etcdclient --hostname etcdclient -v /etc/localtime:/etc/localtime:ro -v /root/gitrepo/resolv.conf:/etc/resolv.conf --net bridge0 -v /TopStor/:/TopStor -v /pace/:/pace moataznegm/quickstor:etcdclient 
 if [[ $isconf_prim == 'nono' ]];
 then
- /pace/watchdoginit & disown
- /pace/keepsendingprim & disown
  exit
-fi
-if [[ $isconf_prim == 'noyes' ]];
-then
- /pace/watchdogprim & disown
- /pace/watchdoginit & disown
- /pace/keepsendingprim & disown
 fi
 
 echo /TopStor/setipports.sh $myclusterip $leader $myhost sync
 /TopStor/setipports.sh $myclusterip $leader $myhost sync
-
-
-
 
 echo starting intstub 
 docker run -itd --rm --privileged \
@@ -378,7 +367,14 @@ docker run -itd --rm --privileged \
  docker exec intsmb sh /hostetc/VolumeCIFSupdate.sh
 #docker run -d --rm --name rmq --hostname rmq  -v /root/gitrepo/resolv.conf:/etc/resolv.conf --net bridge0 -p $etcd:5672:5672 -v /TopStor/:/TopStor -v /pace/:/pace moataznegm/quickstor:rabbitmq 
 echo starting rabbitmq 
-systemctl start rabbitmq-server
+systemctl start rabbitmq-server &
+systemctl is-active rabbitmq-server
+while [ $? -ne 0 ];
+do
+ sleep 1
+ echo checking rabbitmq again
+ systemctl is-active rabbitmq-server
+done
 rabbitmqctl add_user rabb_Mezo YousefNadody 2>/dev/null
 rabbitmqctl set_permissions -p / rabb_Mezo ".*" ".*" ".*" 2>/dev/null
 started=0
@@ -468,16 +464,17 @@ do
 	/pace/etcdput.py $myclusterip sync/$aliast/Add_${myhost}_$myalias/request/$myhost ${aliast}_$stamp.
 	/pace/etcdput.py $myclusterip sync/$aliast/Add_${myhost}_$myalias/request/$leader ${aliast}_$stamp.
 	issync=`/pace/etcdget.py $myclusterip sync initial`initial
+	/pace/checksyncs.py restetcd $myclusterip $myhost >/dev/null
 	echo $issync | grep $myhost
 	if [ $? -eq 0 ];
 	then
 		echo syncrequests only
 		echo row 262 checksync init >> /root/checksync
-    		/pace/checksyncs.py syncrequest $myclusterip $myhost $myip
+    		/pace/checksyncs.py syncrequest $myclusterip $myhost $myip >/dev/null & disown
        	else
 		echo have to syncall
 		echo row 266 checksync init >> /root/checksync
-		/pace/checksyncs.py syncall $myclusterip $myhost $myip
+		/pace/checksyncs.py syncall $myclusterip $myhost $myip >/dev/null & disown
 	fi
 	checkcluster=`docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
 	echo $checkcluster >> /root/dockerlogs.txt
@@ -509,32 +506,19 @@ then
 	echo adding all sync inits as I am primary
 	echo docker exec etcdclient /pace/checksyncs.py syncinit $etcd
 	echo row 293 checksync init >> /root/checksync
-	/pace/checksyncs.py syncinit $etcd $myhost
+	/pace/checksyncs.py syncinit $etcd $myhost >/dev/null & disown 
 fi
-# echo running rabbit receive daemon
-# /TopStor/topstorrecvreply.py $etcd & disown
 /TopStor/etcdput.py $etcd ready/$myhost $mynodeip 
 
-
-
-#docker run --restart unless-stopped --name git -v /root/gitrepo:/usr/local/apache2/htdocs/ --hostname sgit -p 10.11.11.252:80:80 -v /root/gitrepo/httpd.conf:/usr/local/apache2/conf/httpd.conf -itd -v /root/gitrepo/resolv.conf:/etc/resolv.conf moataznegm/quickstor:git
 templhttp='/TopStor/httpd_template.conf'
 rm -rf /TopStordata/httpd.conf
 cp /TopStor/httpd.conf /TopStordata/
 shttpdf='/TopStordata/httpd.conf'
-docker rm -f httpd
-docker rm -f flask
+docker rm -f httpd 2>/dev/null
+docker rm -f flask 2>/dev/null
 rm -rf $httpdf
-#if [ $isprimary -ne 0 ];
-#then
-#	cp $templhttp $shttpdf
-#	sed -i "s/MYCLUSTERH/$myclusterip/g" $shttpdf
-#	sed -i "s/MYCLUSTER/$myclusterip/g" $shttpdf
-#	echo running httpd fowrarder as I am not primary
-#	docker run --rm --name httpd --hostname shttpd --net bridge0 -v /etc/localtime:/etc/localtime:ro -v /root/gitrepo/resolv.conf:/etc/resolv.conf -p $myclusterip:19999:19999 -p $myclusterip:80:80 -p $myclusterip:443:443 -v $shttpdf:/usr/local/apache2/conf/httpd.conf -v /root/topstorwebetc:/usr/local/apache2/topstorwebetc -v /topstorweb:/usr/local/apache2/htdocs/ -itd moataznegm/quickstor:git
-#	docker run -itd --rm --name flask --hostname apisrv -v /etc/localtime:/etc/localtime:ro -v /pace/:/pace -v /pacedata/:/pacedata/ -v /root/gitrepo/resolv.conf:/etc/resolv.conf --net bridge0 -p $myclusterip:5001:5001 -v /TopStor/:/TopStor -v /TopStordata/:/TopStordata moataznegm/quickstor:flask
-#fi
-/TopStor/ioperf.py $etcd $myhost
+/TopStor/ioperf.py $etcd $myhost >/dev/null & disown
+
 echo docker exec etcdclient /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ActivePartners/$myhost $mynodeip 
@@ -563,38 +547,43 @@ else
 fi
  /TopStor/etcddel.py $myclusterip sync/diskref --prefix
  /TopStor/etcdput.py $myclusterip sync/diskref/add_add_add______/request diskref_$stamp
- /pace/diskref.sh $leader $myclusterip $myhost $mynodeip
+ #/pace/diskref.sh $leader $myclusterip $myhost $mynodeip >/dev/null & disown 
+ echo I a hhhhhhhhhhhhhhhhhhhhhhhhere
 #if [ $isprimary -ne 0 ];
 #then
-	/pace/checksyncs.py restetcd $myclusterip $myhost 
-	/pace/checksyncs.py syncrequest $myclusterip $myhost 
+	/pace/checksyncs.py syncrequest $myclusterip $myhost >/dev/null & disown 
  	/TopStor/etcddel.py $myclusterip sync/diskref --prefix
  	/TopStor/etcdput.py $myclusterip sync/diskref/add_add_add______/request diskref_$stamp
 #fi
- /TopStor/refreshdisown.sh & disown 
+ /TopStor/refreshdisown.sh > /dev/null & disown 
  /TopStor/etcdput.py $etcd refreshdisown/$myhost yes 
  #/pace/syncrequestlooper.sh $leaderip $myhost & disown
- /pace/rebootmeplslooper.sh $myclusterip $myhost & disown
+ /pace/rebootmeplslooper.sh $myclusterip $myhost >/dev/null & disown 
  #/TopStor/receivereplylooper.sh & disown
  #/TopStor/iscsiwatchdoglooper.sh $mynodeip $myhost & disown 
- /pace/heartbeatlooper.sh & disown
+ /pace/heartbeatlooper.sh >/dev/null & disown 
  #/pace/updateconfiglooper.sh $myclusterip $myhost & disown
  stamp=`date +%s%N`
 /TopStor/etcddel.py $myclusterip rebootwait/$myhost
 /TopStor/etcddel.py $myclusterip sync/ready $myhost 
 /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip
-/TopStor/etcdput.py $mynodeip ready/$myhost $mynodeip
-/pace/etcdsync.py $myclusterip $mynodeip ready ready
-/pace/etcdsync.py $myclusterip $mynodeip Active Active 
+if [ $isprimary -ne 1 ];
+then
+	/TopStor/etcdput.py $mynodeip ready/$myhost $mynodeip 2>/dev/null
+	/pace/etcdsync.py $myclusterip $mynodeip ready ready 2>/dev/null
+	/pace/etcdsync.py $myclusterip $mynodeip Active Active 2>/dev/null
+fi
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request ready_$stamp 
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request/$leader ready_$stamp 
 #/pace/diskref.py $leader $myculsterip $myhost $mynodeip 
-/pace/diskchange.sh add initial disk
+/pace/diskchange.sh add initial disk >/dev/null  & disown
 rm -rf /promgraf/grafana.db
 cp /TopStor/grafana.db /promgraf/
-/TopStor/getcversion.sh $myclusterip $leader $myhost
+echo /TopStor/getcversion.sh $myclusterip $leader $myhost >/dev/null & disown
+/TopStor/getcversion.sh $myclusterip $leader $myhost >/dev/null & disown
 if [ $isprimary -ne 0 ];
 then
+	echo I am hhhhhhhhhhhhhhhhhhhhhhinnhgjjjjhhhhhhhhhhhhhere
 	cp $templhttp $shttpdf
 	sed -i "s/MYCLUSTERH/$myclusterip/g" $shttpdf
 	sed -i "s/MYCLUSTER/$myclusterip/g" $shttpdf
