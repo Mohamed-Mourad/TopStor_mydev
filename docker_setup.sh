@@ -55,6 +55,8 @@ firewall-cmd --permanent --add-port=88/udp
 firewall-cmd  --permanent --add-port=2381-2481/tcp
 firewall-cmd  --permanent --add-port=2381-2481/udp
 firewall-cmd --reload
+systemctl stop nfs-server
+systemctl  disable nfs-server
 cat /etc/ssh/sshd_config | grep Gateway | grep yes 
 if [ $? -ne 0 ];
 then

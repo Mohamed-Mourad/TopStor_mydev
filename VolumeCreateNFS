@@ -101,8 +101,7 @@ then
  /TopStor/SnapshotCreateHourlytrend $leaderip $DG $name 0 24 7 system 
  #/TopStor/VolumeActivateNFS $leaderip vol=$name user=$userreq
  #echo /TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
- echo /pace/VolumeCheck.py $leaderip $myhost
- /pace/VolumeCheck.py $leaderip $myhost
+ #/pace/VolumeCheck.py $leaderip $myhost
  #/TopStor/nfs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet NFS 
  #chmod a+w /$DG/$name -R
  /pace/putzpool.py $leaderip  

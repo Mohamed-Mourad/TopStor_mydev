@@ -45,7 +45,7 @@ then
  ETCDCTL_API=3 /pace/etcddel.py $leaderip volumes $name
  ETCDCTL_API=3 /pace/etcddel.py $leaderip sync $name
  rm -rf /$DG/smb.$name
- /pace/VolumeCheck.py $leaderip $myhost 
+ #/pace/VolumeCheck.py $leaderip $myhost 
 
  echo s$writev | grep DOMAIN
  if [ $? -eq 0 ];
@@ -160,7 +160,7 @@ then
  /pace/putzpool.py $leaderip 
  docker exec etcdclient /TopStor/logmsg.py VolCsu01 info $userreq $name
  echo ready ;
- /pace/VolumeCheck.py $leaderip $myhost 
+ #/pace/VolumeCheck.py $leaderip $myhost 
  ETCDCTL_API=3 /pace/etcdput.py $etcd dirty/volume 0
  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq
 fi

@@ -24,6 +24,18 @@ docker rm -f $resname
 nmcli conn mod cmynode -ipv4.addresses ${ipaddr}/$ipsubnet
 echo nmcli conn mod cmynode -ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
+counter=20
+while [ $counter -gt 1 ];
+do
+	netstat -ant | grep $ipaddr
+	if [ $? -eq 0 ];
+	then
+		counter=$((counter-1))
+		sleep 1
+	else
+		counter=0
+	fi
+done
 flag=0
 nmcli conn mod cmynode +ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode

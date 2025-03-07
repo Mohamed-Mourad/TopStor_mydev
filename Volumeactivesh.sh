@@ -68,5 +68,5 @@ then
  fi
  /TopStor/etcdput.py $etcd dirty/volume 0     
 fi
- /pace/VolumeCheck.py $leaderip $myhost
+ #/pace/VolumeCheck.py $leaderip $myhost
  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq
