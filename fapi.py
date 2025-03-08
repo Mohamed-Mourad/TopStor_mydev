@@ -159,10 +159,16 @@ def postchange(cmndstring,host='myhost'):
   host = myhost
  z= cmndstring.split(' ')
  msg={'req': 'Pumpthis', 'reply':z}
- ownerip=get('ready/'+host,'--prefix')
+ if 'myhost' in host:
+    ownerip=leaderip
+ else:
+    try:
+        ownerip=get('ready/'+host,'--prefix')[0][1]
+    except:
+        return 'host is not ready'
  #with open('/TopStor/tempdata','w') as f:
  # f.write(str((ownerip[0][1], str(msg),'recvreply',myhost)))
- sendhost(ownerip[0][1], str(msg),'recvreply',myhost)
+ sendhost(ownerip, str(msg),'recvreply',myhost)
 
 def dict_factory(cursor, row):
     d = {}
@@ -269,7 +275,7 @@ def versions(data):
 def swapply(data):
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
- cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]+' '+data['response']
+ cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]+' '+data['response']+' '+'hi1'
  postchange(cmdline)
  versionlst = versions(data)
  versionlst['response'] = data['response']
