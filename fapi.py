@@ -260,7 +260,9 @@ def setversion(data):
 def versions(data):
  if 'baduser' in data['response']:
       return {'response': 'baduser'}
- return getversions()
+ res = getversions()
+ res['response'] = data['response']
+ return res
 
 @app.route('/api/v1/software/apply', methods=['GET','POST'])
 @login_required
@@ -270,6 +272,7 @@ def swapply(data):
  cmdline = '/TopStor/systemcheckout.sh '+data['version'].split(',')[0]+' '+data['response']
  postchange(cmdline)
  versionlst = versions(data)
+ versionlst['response'] = data['response']
  return versionlst
 
 
