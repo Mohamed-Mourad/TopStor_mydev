@@ -19,15 +19,22 @@ def do(leader, leaderip, myhost, myip, etcdip, body):
  print('mtuple',mtuple(body.replace("'",'"')), type(mtuple(body.replace("'",'"'))))
  print('""""""""""""""""""""""""""""""""""')
  r=mtuple(body.replace("'",'"'))
- with open('/root/recv','w') as f:
+ with open('/root/recv','a') as f:
   f.write('Recevied a reply:'+str(body[2:][:-1])+'\n')
  print('############################3')
- with open('/root/recv','w') as f:
+ with open('/root/recv','') as f:
    f.write('Received '+r['req'])
- with open('/root/recv','w') as f:
+ with open('/root/recv','') as f:
   f.write('Recevied a reply:'+str(r['reply'])+'\n')
  with open('/root/recv','a') as f:
    f.write('Request details:'+r['req']+'\n')
+ with open('/root/recv', 'r') as f:
+        lines = f.readlines()
+ if len(lines) > 30:
+        # Keep only the last 30 lines
+        with open('/root/recv', 'w') as f:
+            f.writelines(lines[-15:])
+
 ########## if user ######################
  if r["req"]=='user':
   logmsg.sendlog('Unlin1005', 'info', 'system')
