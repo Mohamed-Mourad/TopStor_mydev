@@ -153,21 +153,19 @@ def uploadUsers(data):
       return 'Error while uploading file!'
 
 
-def postchange(cmndstring,host='myhost'):
+def postchange(cmndstring,host='leaderip'):
  global leaderip, myhost
- if host=='myhost':
-  host = myhost
  z= cmndstring.split(' ')
  msg={'req': 'Pumpthis', 'reply':z}
- if 'myhost' in host:
+ if 'leader' in host:
     ownerip=leaderip
  else:
     try:
         ownerip=get('ready/'+host,'--prefix')[0][1]
     except:
         return 'host is not ready'
- #with open('/TopStor/tempdata','w') as f:
- # f.write(str((ownerip[0][1], str(msg),'recvreply',myhost)))
+ with open('/TopStordata/tempdata','w') as f:
+  f.write(str((ownerip, str(msg),'recvreply',myhost)))
  sendhost(ownerip, str(msg),'recvreply',myhost)
 
 def dict_factory(cursor, row):
