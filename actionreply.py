@@ -22,12 +22,6 @@ def do(leader, leaderip, myhost, myip, etcdip, body):
  with open('/root/recv','a') as f:
   f.write('Recevied a body:'+str(body)+'\n')
  print('############################3')
- with open('/root/recv','a') as f:
-   f.write('Received '+r['req'])
- with open('/root/recv','a') as f:
-  f.write('Recevied a reply:'+str(r['reply'])+'\n')
- with open('/root/recv','a') as f:
-   f.write('Request details:'+r['req']+'\n')
  with open('/root/recv', 'r') as f:
         lines = f.readlines()
  if len(lines) > 30:
