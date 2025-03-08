@@ -20,11 +20,11 @@ def do(leader, leaderip, myhost, myip, etcdip, body):
  print('""""""""""""""""""""""""""""""""""')
  r=mtuple(body.replace("'",'"'))
  with open('/root/recv','a') as f:
-  f.write('Recevied a reply:'+str(body[2:][:-1])+'\n')
+  f.write('Recevied a body:'+str(body)+'\n')
  print('############################3')
- with open('/root/recv','') as f:
+ with open('/root/recv','a') as f:
    f.write('Received '+r['req'])
- with open('/root/recv','') as f:
+ with open('/root/recv','a') as f:
   f.write('Recevied a reply:'+str(r['reply'])+'\n')
  with open('/root/recv','a') as f:
    f.write('Request details:'+r['req']+'\n')
@@ -340,5 +340,5 @@ if __name__=='__main__':
     etcdip = leaderip
  else:
     etcdip = myip
- msg=str({'host': 'localhost', 'req':  "{'req': 'Pumpthis', 'reply': ['/TopStor/UnixAddUser', '10.11.11.251', 'mezo', 'NoHome', 'groupsEveryone', '123', '1G', 'NoAddress', '8', 'hoststub', 'admin']}"})
+ msg=str({'host': 'localhost', 'req':  "{'req': 'Pumpthis', 'reply':['/TopStor/systemcheckout.sh', 'QSD3.721', 'admin', 'hi1']}"})
  do(leader, leaderip, myhost, myip, etcdip, 'b"'+msg+'"') 

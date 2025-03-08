@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 fnupdate () {
 	echo '###########################################' $1
 	git branch | grep $1
