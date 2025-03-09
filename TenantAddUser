@@ -23,9 +23,9 @@ then
 	exit
 fi
 echo $grp | grep 'NoGroup'
-if [ $? -eq 0 ];
+if [ $? -ne 0 ];
 then
-	grp='frezer'
+	grp=`tail /$pool/group_$volume -n 1 | awk -F':' '{print $1}'`
 	sed -i "/^${grp}:/s/$/,${username}/" /$pool'/group_'$volume
 	sed -i "s/:,/:/g" /$pool'/group_'$volume
 fi

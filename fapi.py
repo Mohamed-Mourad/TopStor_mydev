@@ -1290,7 +1290,7 @@ def TenantAddUser(data):
     owner = volinfo[0].split('/')[2]
     pool = volinfo[0].split('/')[3]
     grp = data['groups']
-    if len(grp) < 3:
+    if str(grp) != '0' and str(grp) != volinfo[1].split('_u_')[2].split(':')[0]:
         grp = 'NoGroup'
     cmndstring = '/TopStor/TenantAddUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']+' '+grp
  postchange(cmndstring,owner)
