@@ -560,7 +560,7 @@ fi
 #fi
  /TopStor/refreshdisown.sh > /dev/null & disown 
  /TopStor/etcdput.py $etcd refreshdisown/$myhost yes 
- /pace/diskref.sh $leader $leaderip $myhost $myhostip & disown
+ #/pace/diskref.sh $leader $leaderip $myhost $myhostip & disown
  /pace/rebootmeplslooper.sh $myclusterip $myhost >/dev/null & disown 
  #/TopStor/receivereplylooper.sh & disown
  #/TopStor/iscsiwatchdoglooper.sh $mynodeip $myhost & disown 
@@ -579,7 +579,7 @@ fi
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request ready_$stamp 
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request/$leader ready_$stamp 
 #/pace/diskref.py $leader $myculsterip $myhost $mynodeip 
-/pace/diskchange.sh add initial disk >/dev/null  & disown
+#/pace/diskchange.sh add initial disk >/dev/null  & disown
 rm -rf /promgraf/grafana.db
 cp /TopStor/grafana.db /promgraf/
 echo /TopStor/getcversion.sh $myclusterip $leader $myhost >/dev/null & disown
