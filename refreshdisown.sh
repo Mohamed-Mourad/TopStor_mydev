@@ -17,7 +17,7 @@ then
 else
 	etcdip=$myhostip
 fi
-cujobs=(`echo iscsiwatchdoglooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper volumechecklooper`)
+cujobs=(`echo iscsiwatchdoglooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper volumechecklooper diskreflooper`)
 declare  -A cmdcjobs
 cmdcjobs['iscsiwatchdog']="/TopStor/iscsiwatchdog.sh" 
 cmdcjobs['iscsiwatchdoglooper']="/TopStor/iscsiwatchdoglooper.sh" 
@@ -27,6 +27,7 @@ cmdcjobs['receivereplylooper']="/TopStor/receivereplylooper.sh"
 cmdcjobs['syncrequestlooper']="/pace/syncrequestlooper.sh"
 cmdcjobs['selectsparelooper']="/pace/selectsparelooper.sh"
 cmdcjobs['volumechecklooper']="/pace/VolumeChecklooper.sh"
+cmdcjobs['diskreflooper']="/pace/diskreflooper.sh"
 cmdcjobs['checksyncs']="echo"
 
 while true;
@@ -70,8 +71,8 @@ do
 		cjobs=(`echo "${cjobs[@]}" | grep -v $job`)
 		#cmd=`echo -e $cmdcjobs | grep $job`
 		cmd=${cmdcjobs[$job]}
-	 	echo $cmd $leaderip $myhost \& disown	>> /root/refreshtemp
-	 	$cmd $leaderip $myhost >/dev/null & disown	
+	 	echo $cmd $leaderip $myhost $leader $myhostip\& disown	>> /root/refreshtemp
+	 	$cmd $leaderip $myhost $leader $myhostip >/dev/null & disown	
 	fi
 	flag=$((flag+isproc))
 	echo flagwithiscproc=$flag

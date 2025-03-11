@@ -273,6 +273,7 @@ fi
 myclusterip=`echo $mycluster | awk -F'/' '{print $1}'`
 mynodeip=`echo $mynode | awk -F'/' '{print $1}'`
 myip=$mynodeip
+myhostip=$mynodeip
 echo $mynodedev | grep $myclusterdev
 if [ $? -eq 0 ];
 then
@@ -559,7 +560,7 @@ fi
 #fi
  /TopStor/refreshdisown.sh > /dev/null & disown 
  /TopStor/etcdput.py $etcd refreshdisown/$myhost yes 
- #/pace/syncrequestlooper.sh $leaderip $myhost & disown
+ /pace/diskref.sh $leader $leaderip $myhost $myhostip & disown
  /pace/rebootmeplslooper.sh $myclusterip $myhost >/dev/null & disown 
  #/TopStor/receivereplylooper.sh & disown
  #/TopStor/iscsiwatchdoglooper.sh $mynodeip $myhost & disown 

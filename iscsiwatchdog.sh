@@ -76,7 +76,7 @@ do
 	then
 		targetn=$targetnewn
 		lsscsi=0
-		/pace/diskchange.sh dirty change add
+#		/pace/diskchange.sh dirty change add
 		#ps -ef | grep diskchange | grep -v grep
 		#if [ $? -ne 0 ];
 		#then
@@ -91,21 +91,21 @@ do
 #		fi
 
 	fi
-	ps -ef | grep diskchange | grep -v grep
-	if [ $? -ne 0 ];
-	then
-		cat /TopStordata/diskchange | grep stop
-		if [ $? -ne 0 ];
-		then
-			diskchange=`cat /TopStordata/diskchange`
-			echo 33333333333333333333333333333333333333333333start watchdog diskchange
-			echo /pace/diskchange.sh $diskchange
-			/pace/diskchange.sh $diskchange 
-			echo stop stop stop stop >/TopStordata/diskchange
-			/pace/diskchange.sh checksync add add
-			echo 33333333333333333333333333333333333333333333stop watchdog diskchange
-		fi
-	fi
+	#ps -ef | grep diskchange | grep -v grep
+	#if [ $? -ne 0 ];
+	#then
+#		cat /TopStordata/diskchange | grep stop
+#		if [ $? -ne 0 ];
+#		then
+#			diskchange=`cat /TopStordata/diskchange`
+#			echo 33333333333333333333333333333333333333333333start watchdog diskchange
+#			echo /pace/diskchange.sh $diskchange
+#			/pace/diskchange.sh $diskchange 
+#			echo stop stop stop stop >/TopStordata/diskchange
+#			/pace/diskchange.sh checksync add add
+#			echo 33333333333333333333333333333333333333333333stop watchdog diskchange
+#		fi
+#	fi
 
         /pace/putzpool.py $leader $leaderip $myhost $myhostip 
 	echo '###############################################################'
