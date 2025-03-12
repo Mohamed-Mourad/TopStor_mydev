@@ -1519,7 +1519,7 @@ def api_users_grouplist(data):
     allgroups = getgroups()
     for group in allgroups:
         grp.append({'id':group[1],'text':group[0]})
- return jsonify({'results':grp})
+ return jsonify({'results':grp, 'response':data['response']})
 
 
 @app.route('/api/v1/pools/actionOnDisk', methods=['GET','POST'])
