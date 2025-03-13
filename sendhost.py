@@ -22,5 +22,12 @@ def sendhost(host, req, que, frmhst, port=5672):
  conn.close()
 if __name__ == "__main__":
  import sys
- sendhost(*sys.argv[1:])
+ if len(sys.argv) < 2:
+    host='10.11.11.100'
+    req = {'req': 'Pumpthis', 'reply': ['/TopStor/VolumeCreateCIFS', '10.11.11.100', 'pdhcp1055322164', 'nf5', '1G', 'Everyone', '10.11.11.34', '24', 'active', 'admin', 'dhcp152953', 'admin']}
+    que='recvreply'
+    frmhst='dhcp152953'
+    sendhost(host, req, que, frmhst)
+ else:
+    sendhost(*sys.argv[1:])
  

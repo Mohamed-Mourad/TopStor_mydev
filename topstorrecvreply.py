@@ -8,6 +8,9 @@ def callback(ch, method, properties, body):
  #with open('/root/toactionreply','w') as f:
  #f.write(" ".join([leader, leaderip, myhost, myip,etcdip, str(body)]))
  print(" ".join([leader, leaderip, myhost, myip,etcdip, str(body)]))
+ with open("/root/recvreply",'a') as f:
+    f.write(" ".join([leader, leaderip, myhost, myip,etcdip, str(body)]))
+    
  actionreply.do(leader, leaderip, myhost, myip,etcdip, body.decode())
 
 cmdline='docker exec etcdclient /TopStor/etcdgetlocal.py leader'

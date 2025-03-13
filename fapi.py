@@ -157,15 +157,15 @@ def postchange(cmndstring,host='leaderip'):
  global leaderip, myhost
  z= cmndstring.split(' ')
  msg={'req': 'Pumpthis', 'reply':z}
- if 'leader' in host:
+ if myhost in host:
     ownerip=leaderip
  else:
     try:
         ownerip=get('ready/'+host,'--prefix')[0][1]
     except:
         return 'host is not ready'
- with open('/TopStordata/tempdata','w') as f:
-  f.write(str((ownerip, str(msg),'recvreply',myhost)))
+ with open('/TopStordata/tempdata','a') as f:
+  f.write(str((ownerip, str(msg),'recvreply',myhost))+'\n')
  sendhost(ownerip, str(msg),'recvreply',myhost)
 
 def dict_factory(cursor, row):
@@ -873,13 +873,16 @@ def volumecreate(data):
  else:
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['groups']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
  print('#############################')
+ with open('/TopStordata/volcreate','a') as f:
+    f.write(str(data)+'\n'+'owner '+str(data['owner'])+'\n')
  print(data)
  print(datastr)
  print('###########################')
  cmndstring = '/TopStor/VolumeCreate'+data['type']+' '+leaderip+' '+datastr
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ #z= cmndstring.split(' ')
+ #msg={'req': 'Pumpthis', 'reply':z}
+ #sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
  return data
 
 def getlogin(token):
