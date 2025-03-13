@@ -968,7 +968,7 @@ def volumeconfig(data):
         datatype=volume['prot']
 
     if data['ipaddress'] != volume['ipaddress']:
-        isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
+        isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))
         if isvu == 0:
             print('ip is valid')
         else:

@@ -103,6 +103,9 @@ def getall(leadip, alldsks='0'):
    voldict['chappas'] = vol[1].split('/')[7]
    voldict['prot'] = 'ISCSI'
    volumesdict[voldict['name']] = voldict.copy()
+  if len(voldict['ipaddress']) < 5:
+        voldict['ipaddress'] = '256.256.256.256';
+        voldict['Subnet'] = '24'
  
  for alldsk in alldsks:
   if alldsk == '_1':
