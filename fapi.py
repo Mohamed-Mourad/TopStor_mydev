@@ -153,9 +153,11 @@ def uploadUsers(data):
       return 'Error while uploading file!'
 
 
-def postchange(cmndstring,host='leaderip'):
+def postchange(cmndstring,host='leader'):
  global leaderip, myhost
  z= cmndstring.split(' ')
+ if 'leader' in host:
+    host=myhost
  msg={'req': 'Pumpthis', 'reply':z}
  if myhost in host:
     ownerip=leaderip
@@ -378,13 +380,14 @@ def dgsdelpool(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  getalltime()
- owner = allinfo['pools'][data['pool']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['pools'][data['pool']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  datastr = data['pool']+' '+data['user'] 
  cmndstring = '/TopStor/DGdestroyPool '+leaderip+' '+datastr
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return jsonify(data)
 
 @app.route('/api/v1/pools/addtopool', methods=['GET','POST'])
@@ -418,25 +421,26 @@ def dgsaddtopool(data):
  if len(bestdisks) < 1:
     return jsonify(data)
  selecteddisks = bestdisks.split(',')
- owner = allinfo['pools'][data['pool']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['pools'][data['pool']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  diskstring = ''
  for dsk in selecteddisks:
   diskstring += dsk+":"+dsk[-5:]+" "
  if 'mirror' in data['redundancy']:
-  datastr = 'addmirror '+data['user']+' '+owner+" "+diskstring+data['pool']
+  datastr = 'addmirror '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'volset' in data['redundancy']:
-  datastr = 'addstripeset '+data['user']+' '+owner+" "+diskstring+data['pool']
+  datastr = 'addstripeset '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid5' in data['redundancy']:
-  datastr = 'addparity '+data['user']+' '+owner+" "+diskstring+data['pool']
+  datastr = 'addparity '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid6plus' in data['redundancy']:
-  datastr = 'addparity3 '+data['user']+' '+owner+" "+diskstring+data['pool']
+  datastr = 'addparity3 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid6' in data['redundancy']:
-  datastr = 'addparity2 '+data['user']+' '+owner+" "+diskstring+data['pool']
+  datastr = 'addparity2 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  cmndstring = '/TopStor/DGsetPool '+leaderip+' '+datastr
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return jsonify(data)
  
 
@@ -473,24 +477,25 @@ def dgsnewpool(data):
  print(';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;')
  print(selecteddisks)
  print('#########################333')
- owner = allinfo['disks'][selecteddisks[0]]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['disks'][selecteddisks[0]]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  if 'single' in data['redundancy']:
-  datastr = 'Single '+data['user']+' '+owner+" "+selecteddisks[0]+" "+selecteddisks[0][-5:]+" nopool "+data['user']+" "+owner
+  datastr = 'Single '+data['user']+' '+data['owner']+" "+selecteddisks[0]+" "+selecteddisks[0][-5:]+" nopool "+data['user']+" "+data['owner']
  elif 'mirror' in data['redundancy']:
-  datastr = 'mirror '+data['user']+' '+owner+" "+diskstring+"nopool "+data['user']+" "+owner
+  datastr = 'mirror '+data['user']+' '+data['owner']+" "+diskstring+"nopool "+data['user']+" "+data['owner']
  elif 'volset' in data['redundancy']:
-  datastr = 'stripeset '+data['user']+' '+owner+" "+diskstring+" "+data['user']+" "+owner
+  datastr = 'stripeset '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
  elif 'raid5' in data['redundancy']:
-  datastr = 'parity '+data['user']+' '+owner+" "+diskstring
+  datastr = 'parity '+data['user']+' '+data['owner']+" "+diskstring
  elif 'raid6plus' in data['redundancy']:
-  datastr = 'parity3 '+data['user']+' '+owner+" "+diskstring+" "+data['user']+" "+owner
+  datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
  elif 'raid6' in data['redundancy']:
-  datastr = 'parity2 '+data['user']+' '+owner+" "+diskstring+" "+data['user']+" "+owner
+  datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
  cmndstring = '/TopStor/DGsetPool '+leaderip+' '+datastr+' '+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return jsonify(data)
  
 
@@ -691,13 +696,14 @@ def userchange(data):
  groupstr = ''
  if 'Cluster' not in data['tenant']:
      volinfo = get('vol',data['tenant'])[0]
+     data['owner'] = 'leader'
      if 'NFS' in volinfo[0]:
-        owner = volinfo[0].split('/')[2]
+        data['owner'] = volinfo[0].split('/')[2]
         pool = volinfo[0].split('/')[3]
         if len(grps) < 3:
             grps = 'NoGroup'
      cmndstring = '/TopStor/TenantChangeUser '+leaderip+' '+data['name']+' groups'+grps+' '+pool+' '+data['tenant']+' '+data['response']
-     postchange(cmndstring,owner)
+     postchange(cmndstring,data['owner'])
      return data
  allgroups = getgroups()
  if len(grps) < 1:
@@ -824,9 +830,10 @@ def volumesnapshotscreate(data):
  print(datastr)
  print('###########################')
  cmndstring = '/TopStor/SnapshotCreate'+datastr+' '+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return data
 
 
@@ -958,7 +965,7 @@ def volumeconfig(data):
   return {'response': 'baduser'}
  getalltime()
  volume = allinfo['volumes'][data['volume']]
- owner = volume['host']
+ data['owner'] = volume['host']
  if 'ipaddress' not in data:
    data['ipaddress'] = volume['ipaddress']
  else:
@@ -979,10 +986,10 @@ def volumeconfig(data):
             else:
                 logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
             return data
- if owner == leader:
+ if data['owner'] == leader:
   ownerip = leaderip
  else:
-  ownerip = allinfo['hosts'][owner]['ipaddress']
+  ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  datastr = ''
  data['owner'] = allinfo['hosts'][allinfo['pools'][volume['pool']]['host']]['name']
  if 'ISCSI' in data['type']:
@@ -1007,9 +1014,10 @@ def volumeconfig(data):
   print('owner',ownerip)
   print('33333333333333333333333333333333333333333333333#############################')
  cmndstring = '/TopStor/VolumeChange'+data['type']+' '+leaderip+' '+datastr
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  #config(data)
  return data
 
@@ -1110,15 +1118,16 @@ def volumesnapshotrol(data):
  getalltime()
  volume = allinfo['snapshots'][data['name']]['volume']
  pool = allinfo['snapshots'][data['name']]['pool']
- owner = allinfo['snapshots'][data['name']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['snapshots'][data['name']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  cmndstring = "/TopStor/SnapShotRollback "+pool+" "+volume+" "+data['name']+" "+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
  print('##################################')
  print(data)
  print('################################333')
- sendhost(ownerip, str(msg),'recvreply',myhost)
+# sendhost(ownerip, str(msg),'recvreply',myhost)
         		 
  return data
 
@@ -1130,12 +1139,13 @@ def volumesnapshotperioddel(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  getalltime()
- owner = allinfo['snapperiods'][data['name']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['snapperiods'][data['name']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  cmndstring = "/TopStor/SnapShotPeriodDelete "+leaderip+" "+data['name']+" "+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return data  
 
 
@@ -1148,15 +1158,16 @@ def volumesnapshotdel(data):
  getalltime()
  volume = allinfo['snapshots'][data['name']]['volume']
  pool = allinfo['snapshots'][data['name']]['pool']
- owner = allinfo['snapshots'][data['name']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['snapshots'][data['name']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  cmndstring = "/TopStor/SnapShotDelete "+pool+" "+volume+" "+data['name']+" "+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
  print('##################################')
  print(data)
  print('################################333')
- sendhost(ownerip, str(msg),'recvreply',myhost)
+# sendhost(ownerip, str(msg),'recvreply',myhost)
         		 
  return data
 
@@ -1168,15 +1179,16 @@ def volumeactive(data):
       return {'response': 'baduser'}
  pool = allinfo['volumes'][data['name']]['pool']
  prot = allinfo['volumes'][data['name']]['prot']
- owner = allinfo['volumes'][data['name']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['volumes'][data['name']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  cmndstring = "/TopStor/Volumeactive.py "+leaderip+" "+myhost+" "+pool+" "+data['name']+" "+prot+" "+data['active']+" "+data['user']
+ postchange(cmndstring,data['owner'])
  print('##################################')
  print('volumeactive',cmndstring)
  print('##################################')
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
- sendhost(ownerip, str(msg),'recvreply',myhost)
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
+# sendhost(ownerip, str(msg),'recvreply',myhost)
  return data
 
 
@@ -1189,15 +1201,16 @@ def volumedel(data):
   return {'response': 'baduser'}
  getalltime()
  pool = allinfo['volumes'][data['name']]['pool']
- owner = allinfo['volumes'][data['name']]['host']
- ownerip = allinfo['hosts'][owner]['ipaddress']
+ data['owner'] = allinfo['volumes'][data['name']]['host']
+ ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  cmndstring = "/TopStor/VolumeDelete"+data['type']+" "+leaderip+" "+pool+" "+data['name']+" "+data['type']+" "+data['user']
- z= cmndstring.split(' ')
- msg={'req': 'Pumpthis', 'reply':z}
+ postchange(cmndstring,data['owner'])
+# z= cmndstring.split(' ')
+# msg={'req': 'Pumpthis', 'reply':z}
  print('##################################')
  print(data)
  print('################################333')
- sendhost(ownerip, str(msg),'recvreply',myhost)
+# sendhost(ownerip, str(msg),'recvreply',myhost)
         		 
  return data
 
@@ -1289,14 +1302,15 @@ def TenantAddUser(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  volinfo = get('vol',data['tenant'])[0]
+ data['owner']= 'leader' 
  if 'NFS' in volinfo[0]:
-    owner = volinfo[0].split('/')[2]
+    data['owner'] = volinfo[0].split('/')[2]
     pool = volinfo[0].split('/')[3]
     grp = data['groups']
     if str(grp) != '0' and str(grp) != volinfo[1].split('_u_')[2].split(':')[0]:
         grp = 'NoGroup'
     cmndstring = '/TopStor/TenantAddUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']+' '+data['userid']+' '+grp
- postchange(cmndstring,owner)
+ postchange(cmndstring,data['owner'])
  return data
  
 def TenantDelUser(data):
@@ -1304,11 +1318,12 @@ def TenantDelUser(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  volinfo = get('vol',data['tenant'])[0]
+ data['owner'] = 'leader'
  if 'NFS' in volinfo[0]:
-    owner = volinfo[0].split('/')[2]
+    data['owner'] = volinfo[0].split('/')[2]
     pool = volinfo[0].split('/')[3]
     cmndstring = '/TopStor/TenantDelUser '+leaderip+' '+data['response']+' '+pool+' '+data['tenant']+' '+data['name']
- postchange(cmndstring,owner)
+ postchange(cmndstring,data['owner'])
  return data
 
 
@@ -1351,7 +1366,9 @@ def UnixAddUser(data):
   groupstr = groupstr[:-1]
  cmndstring = '/TopStor/UnixAddUser '+leaderip+' '+data.get('name')+' '+pool+' groups'+groupstr+' ' \
      +data.get('Password')+' '+data.get('Volsize')+'G '+data.get('HomeAddress')+' '+data.get('HomeSubnet')+' hoststub'+' '+data['user']
-
+ print('*************************************************************************')
+ print(cmndstring)
+ print('*************************************************************************')
  postchange(cmndstring)
  return data 
 
@@ -1536,13 +1553,14 @@ def offlineOrOnlineDisk(data):
     pool = data['pool']
     disk = data['actualdisk'] # "scsi-*" format. 
     #disk = data['actualdisk'] # "sd*" format.
-    owner = allinfo['pools'][pool]['host']
-    ownerip = allinfo['hosts'][owner]['ipaddress']
+    data['owner'] = allinfo['pools'][pool]['host']
+    ownerip = allinfo['hosts'][data['owner']]['ipaddress']
     datastr = myhost + ' ' + data['user'] + ' ' + leaderip + ' ' + action + ' ' + pool + ' ' + disk
-    cmdline = 'python /TopStor/actionOnDisk.py ' + datastr
-    z = cmdline.split(' ')
-    msg = {'req': 'Pumpthis', 'reply':z}
-    sendhost(ownerip, str(msg),'recvreply',myhost)
+    cmndstring = 'python /TopStor/actionOnDisk.py ' + datastr
+    postchange(cmndstring,data['owner'])
+#    z = cmdline.split(' ')
+#    msg = {'req': 'Pumpthis', 'reply':z}
+#    sendhost(ownerip, str(msg),'recvreply',myhost)
     return data
 
 @app.route('/api/v1/hosts/getConfig', methods=['GET','POST'])
