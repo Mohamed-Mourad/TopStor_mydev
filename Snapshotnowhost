@@ -10,6 +10,15 @@ stype=`echo $@ | awk '{print $2}' | awk -F'.' '{print $1}'`;
 receiver=` echo $@ | awk '{print $NF'}`
 shortreceiver=`echo $receiver | awk -F'_' '{print $1}'`
 echo $pDG
+pp=`/sbin/zpool list | grep $DG`
+echo pp=$pp
+echo $pp | grep $DG
+if [ $? -ne 0 ]; 
+then
+ echo host not owner
+ exit
+fi
+
 leaderip=` docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
 	myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternode`
 	myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
@@ -22,6 +31,7 @@ leaderip=` docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
  		etcd=$leaderip
  	fi
 
+docker exec etcdclient /TopStor/logqueue.py `basename "$0"` start system 
 
 userreq='system'
 stamp=`date +%s`
@@ -31,7 +41,7 @@ echo $pp | grep $DG
 if [ $? -ne 0 ]; 
 then
  echo host not owner
- docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop_cancel system 
+ docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish system 
  exit
 else
  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` running system 
@@ -132,10 +142,10 @@ then
     echo successfulwork
     docker exec etcdclient /TopStor/logmsg.py Replispacesu02 info $userreq $vol $shortreceiver
   fi 
-  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop system 
+  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish system 
  fi
  #./etcdput.py $leaderip running/$myhost/$receiver finished 
  #./etcdput.py $leaderip sync/running/____/request running_$stamp
  #./etcdput.py $leaderip sync/running/____/request/$leader running_$stamp
 fi
-docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop system 
+docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish system 
