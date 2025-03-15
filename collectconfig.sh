@@ -96,7 +96,7 @@ echo Known Replication Partners
 ./etcdget.py $etcdip repli --prefix
 echo '############################################################################################################################################'
 echo Active Tunnels
-/TopStor/activatetunnels.sh
+/TopStor/activatetunnels.sh $leaderip
 echo '############################################################################################################################################'
 echo sync request status
 /pace/etcdget.py $leaderip sync --prefix | grep -v initial 

@@ -9,12 +9,13 @@ from sendhost import sendhost
 
 readies = 0 
 
-def postchange(thishost,myhost):
- global leaderip
- cmndstring = '/TopStor/collectconfig.py '+leaderip+' '+thishost
+def postchange(hostname, hostip):
+ global leaderip, myhost
+ cmndstring = '/TopStor/collectconfig.py '+leaderip+' '+hostname
+ print('cmd is', cmndstring)
  z= cmndstring.split(' ')
  msg={'req': 'Pumpthis', 'reply':z}
- sendhost(thishost, str(msg),'recvreply',myhost)
+ sendhost(hostip, str(msg),'recvreply',myhost)
 
 
 def json_zip(j):
@@ -46,37 +47,43 @@ def updateConfig(leaderip, nodeName):
     zipped = json_zip(content)
     put(leaderip, 'getconfig/'+nodeName, zipped)
 
-def getConfig(ldrip, nodeName):
-    global leaderip,readies
+def getConfig(ldrip, mynode):
+    global leaderip,readies, myhost
     leaderip = ldrip
+    myhost = mynode
     with open('/root/collectconfig','w') as f:
-        f.write(leaderip+' '+nodeName)
+        f.write(leaderip+' '+mynode)
     stamp=str(time())
     dels(leaderip,'getconfig','--prefix')
     if readies == 0:
-     readies=get(leaderip,'ready','--prefix')
+        readies = get(leaderip, 'ready/','--prefix')
     for ready in readies:
-        thishost=ready[1]
-        postchange(thishost,nodeName)
-    #put(leaderip,'sycgetconfig/__/request','getconfig_'+stamp)
+     readyname = ready[0].split('/')[1]
+     readyip = ready[1]   
+     postchange(readyname, readyip)
     counter = 0
     while counter < 60:
         counter += 1
-        sleep(1)
+        sleep(3)
+        print('checking',counter)
+        
+        print('getetcd',get(leaderip,'getconfig','--prefix'))
         if len(get(leaderip,'getconfig','--prefix')) == len(readies):
+            print('all is done')
             counter = 100
     
-def downloadConfig(ldrip,nodeName):
-    global leaderip, readies
+def downloadConfig(ldrip,mynode):
+    global leaderip, readies, myhost
     leaderip = ldrip
-    if readies == 0:
-     readies=get(leaderip,'ready','--prefix')
+    myhost = mynode
     cmdline = 'rm -rf /TopStordata/config*'.split()
     content = subprocess.run(cmdline,stdout=subprocess.PIPE, text=True).stdout
+    if readies == 0:
+        readies = get(leaderip, 'ready/','--prefix')
     for ready in readies:
         noden = ready[0].split('/')[1]
         nodeip = ready[1]
-        zipped = get(leaderip, 'getconfig/'+nodeip )[0]
+        zipped = get(leaderip, 'getconfig/'+noden )[0]
         unzipped = json_unzip(zipped)
         with open("/TopStordata/" + 'config_'+ noden + ".txt", "w") as file:
             file.write(unzipped)
@@ -84,8 +91,8 @@ def downloadConfig(ldrip,nodeName):
 
 if __name__=='__main__':
     leaderip = sys.argv[1]
-    nodeName = sys.argv[2]
+    myhost = sys.argv[2]
     with open('/root/collectconfig','w') as f:
-        f.write(leaderip+' '+nodeName)
-    getConfig(leaderip, nodeName)
-    downloadConfig(leaderip, nodeName)
+        f.write(leaderip+' '+myhost)
+    getConfig(leaderip, myhost)
+    downloadConfig(leaderip, myhost)
