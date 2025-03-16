@@ -604,4 +604,7 @@ docker run -d -p $mynodeip:9100:9100 -v /proc:/proc -v /sys:/sys --name promexpo
 docker rm -f promcadvisor
 docker run   --volume=/:/rootfs:ro   --volume=/var/run:/var/run:ro   --volume=/sys:/sys:ro   --volume=/var/lib/docker/:/var/lib/docker:ro   --volume=/dev/disk/:/dev/disk:ro   --publish=$mynodeip:9101:8080   --detach=true   --name=promcadvisor   --privileged   --device=/dev/kmsg   gcr.io/cadvisor/cadvisor
  #/pace/zfsping.py $leaderip $myhost & disown #### it is in refreshdisown
+if [ $isprimary -eq 0 ];
+then
  /pace/fapilooper.sh & disown
+fi
