@@ -524,6 +524,7 @@ rm -rf $httpdf
 
 echo docker exec etcdclient /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
+/pace/diskref.py $leader $myculsterip $myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ActivePartners/$myhost $mynodeip 
 stamp=`date +%s%N`
 /pace/etcddel.py $myclusterip sync/ready/Add_${myhost} --prefix
@@ -558,8 +559,8 @@ fi
  	#/TopStor/etcddel.py $myclusterip sync/diskref --prefix
  	#/TopStor/etcdput.py $myclusterip sync/diskref/add_add_add______/request diskref_$stamp
 #fi
- /TopStor/refreshdisown.sh > /dev/null & disown 
  /TopStor/etcdput.py $etcd refreshdisown/$myhost yes 
+ /TopStor/refreshdisown.sh > /dev/null & disown 
  #/pace/diskref.sh $leader $leaderip $myhost $myhostip & disown
  /pace/rebootmeplslooper.sh $myclusterip $myhost >/dev/null & disown 
  #/TopStor/receivereplylooper.sh & disown
@@ -578,7 +579,6 @@ then
 fi
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request ready_$stamp 
 /TopStor/etcdput.py $myclusterip sync/ready/Add_${myhost}_$mynodeip/request/$leader ready_$stamp 
-#/pace/diskref.py $leader $myculsterip $myhost $mynodeip 
 #/pace/diskchange.sh add initial disk >/dev/null  & disown
 rm -rf /promgraf/grafana.db
 cp /TopStor/grafana.db /promgraf/
