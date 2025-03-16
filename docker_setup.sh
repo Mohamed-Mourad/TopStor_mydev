@@ -524,7 +524,7 @@ rm -rf $httpdf
 
 echo docker exec etcdclient /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ready/$myhost $mynodeip 
-/pace/diskref.py $leader $myculsterip $myhost $mynodeip 
+/pace/diskref.sh $leader $myculsterip $myhost $mynodeip 
 /TopStor/etcdput.py $myclusterip ActivePartners/$myhost $mynodeip 
 stamp=`date +%s%N`
 /pace/etcddel.py $myclusterip sync/ready/Add_${myhost} --prefix
