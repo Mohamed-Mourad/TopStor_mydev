@@ -11,7 +11,7 @@ fnupdate () {
 	if [ $? -ne 0 ];
 	then
 		fold=`pwd | awk -F'/' '{print $NF'`
-		echo something went wrong while updating $1 in directory $fold.... consult the devleloper
+		echo something went wrong while updating $1 in directory $job .... consult the devleloper
 		git remote remove myrepo
 		exit
 	fi
