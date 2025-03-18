@@ -13,6 +13,12 @@ fnupdate () {
 		fold=`pwd | awk -F'/' '{print $NF'`
 		echo something went wrong while updating $1 in directory $job .... consult the devleloper
 		git remote remove myrepo
+		cd /root/gitrepo/git/$gitrepo
+		rm -rf *
+		git init --bare
+		cd ..
+		echo chown -R 33:33 $gitrepo
+		cd /TopStor
 		exit
 	fi
 	sync
