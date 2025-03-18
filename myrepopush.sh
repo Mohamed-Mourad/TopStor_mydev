@@ -6,7 +6,7 @@ fnupdate () {
 	git commit -am 'fixing' --allow-empty
 	git checkout -b $1
 	git checkout  $1
-	git push myrepo $1
+	git push myrepo $1 $2
 	if [ $? -ne 0 ];
 	then
 		fold=`pwd | awk -F'/' '{print $NF'`
@@ -30,6 +30,7 @@ fi
 flag=1
 echo branch $branch
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+force=''
 while [ $flag -ne 0 ];
 do
 	rjobs=(`echo "${cjobs[@]}"`)
@@ -44,6 +45,7 @@ do
 		then
 			echo git remote add myrepo http://${myhostip}/git/$gitrepo
 			git remote add myrepo http://${myhostip}/git/$gitrepo
+			force='--force'
 		fi
  		echo $job
 		cd /$job
@@ -52,7 +54,7 @@ do
 			echo the directory $job is not found... exiting
 			exit
 		fi
-		fnupdate $branch 
+		fnupdate $branch $force 
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$jobinfo//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
