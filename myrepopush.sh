@@ -49,6 +49,7 @@ do
 			rm -rf *
 			git init --bare
 			cd ..
+			echo chown -R 33:33 $gitrepo
 			chown -R 33:33 $gitrepo
 		fi
  		echo $job
