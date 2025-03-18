@@ -65,4 +65,5 @@ cd /pace
 git show | grep commit
 cd /TopStor
 git show | grep commit
+/TopStor/myrepopush.sh $branch
 echo finished
