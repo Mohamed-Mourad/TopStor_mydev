@@ -31,7 +31,6 @@ fi
 flag=1
 echo branch $branch
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
-force=''
 while [ $flag -ne 0 ];
 do
 	rjobs=(`echo "${cjobs[@]}"`)
@@ -46,7 +45,9 @@ do
 		then
 			echo git remote add myrepo http://${myhostip}/git/$gitrepo
 			git remote add myrepo http://${myhostip}/git/$gitrepo
-			force='--force'
+			cd /root/gitrepo/git/$gitrepo
+			rm -rf *
+			git init --bare
 		fi
  		echo $job
 		cd /$job
