@@ -64,7 +64,7 @@ do
 			exit
 		fi
 		fnupdate $branch $gitrepo $leaderlocip
-		cjobs=(`echo "${cjobs[@]}" | sed "s/$job//g" `)
+		cjobs=(`echo "${cjobs[@]}" | sed "s/$jobinfo//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
 	if [ $lencjobs -le 3 ];
