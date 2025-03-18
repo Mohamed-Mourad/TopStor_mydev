@@ -6,7 +6,7 @@ fnupdate () {
 	git commit -am 'fixing' --allow-empty
 	git checkout -b $1
 	git checkout  $1
-	git push origin $1
+	git push myrepo $1
 	if [ $? -ne 0 ];
 	then
 		fold=`pwd | awk -F'/' '{print $NF'`
@@ -39,6 +39,7 @@ do
 		job=`echo $jobinfo | awk -F'_' '{print $1}'`
 		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		echo '###########################################'
+		echo _____$job and $gitrepo_____
 		git remote -v | grep myrepo
 		if [ $? -ne 0 ];
 		then
