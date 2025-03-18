@@ -38,7 +38,7 @@ fi
 flag=1
 echo branch $branch
 chown 33:33 /root/gitrepo/git/*  -R
-exit
+
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
 while [ $flag -ne 0 ];
 do
