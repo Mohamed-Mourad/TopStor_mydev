@@ -29,7 +29,7 @@ then
 fi 
 flag=1
 echo branch $branch
-myhostip='docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip'
+myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
 while [ $flag -ne 0 ];
 do
 	rjobs=(`echo "${cjobs[@]}"`)
