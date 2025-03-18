@@ -27,8 +27,8 @@ fnupdate () {
 }
 cjobs=(`echo TopStor_TopStordev pace_HC topstorweb_TopStorweb`)
 branch=$1
-leaderip=`docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
 leader=`docker exec etcdclient /TopStor/etcdgetlocal.py leader`
+leaderlocip=`docker exec etcdclient /TopStor/etcdgetlocal.py ready/$leader`
 myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternode`
 echo $myhost | grep $leader
 if [ $? -eq 0 ];
@@ -63,7 +63,7 @@ do
 			echo the directory $job is not found... exiting
 			exit
 		fi
-		fnupdate $branch $gitrepo $leaderip
+		fnupdate $branch $gitrepo $leaderlocip
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$job//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
