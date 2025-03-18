@@ -42,6 +42,7 @@ do
 		echo '###########################################'
 		job=`echo $jobinfo | awk -F'_' '{print $1}'`
 		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
+		cd /$job
 		git remote -v | grep myrepo
 		if [ $? -ne 0 ];
 		then
