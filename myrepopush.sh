@@ -37,9 +37,10 @@ do
 	echo rjobs=${rjobs[@]}
 	for jobinfo in "${rjobs[@]}";
 	do
-		job=`echo $jobinfo | awk -F'_' '{print $1}'`
-		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		echo '###########################################'
+		job=`echo $jobinfo | awk -F'_' '{print $1}'`
+		cd /$job
+		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		git remote -v | grep myrepo
 		if [ $? -ne 0 ];
 		then
