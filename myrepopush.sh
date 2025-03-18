@@ -7,7 +7,7 @@ fnupdate () {
 	git checkout -b $1
 	git checkout  $1
 	echo git push myrepo $1 $2
-	git push myrepo $1 $2
+	git push myrepo $1 -u --force
 	if [ $? -ne 0 ];
 	then
 		fold=`pwd | awk -F'/' '{print $NF'`
