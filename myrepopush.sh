@@ -56,7 +56,8 @@ do
 			rm -rf *
 			git init --bare
 			cd ..
-			echo chown -R 33:33 /root/gitrepo/git/$gitrepo
+			echo chown 33:33 /root/gitrepo/git/$gitrepo -R
+			chown 33:33 /root/gitrepo/git/$gitrepo -R
 		fi
  		echo $job
 		cd /$job
@@ -78,9 +79,6 @@ cd /TopStor
 myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternode`
 leaderip=`docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
 stamp=`date +%s`
-/TopStor/etcddel.py $leaderip sync/cversion --prefix
-/TopStor/etcdput.py $leaderip sync/cversion/_${branch}__/request cversion_$stamp
-/TopStor/etcdput.py $leaderip sync/cversion/_${branch}__/request/$myhost cversion_$stamp
 cd /topstorweb
 git show | grep commit
 cd /pace
