@@ -39,11 +39,11 @@ do
 	do
 		echo '###########################################'
 		job=`echo $jobinfo | awk -F'_' '{print $1}'`
-		cd /$job
 		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		git remote -v | grep myrepo
 		if [ $? -ne 0 ];
 		then
+			cd /$job
 			echo git remote add myrepo http://${myhostip}/git/$gitrepo
 			git remote add myrepo http://${myhostip}/git/$gitrepo
 			cd /root/gitrepo/git/$gitrepo
@@ -60,7 +60,7 @@ do
 			echo the directory $job is not found... exiting
 			exit
 		fi
-		fnupdate $branch $force 
+		fnupdate $branch 
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$jobinfo//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`
