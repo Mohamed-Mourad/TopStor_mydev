@@ -6,6 +6,7 @@ fnupdate () {
 	git commit -am 'fixing' --allow-empty
 	git checkout -b $1
 	git checkout  $1
+	echo git push myrepo $1 $2
 	git push myrepo $1 $2
 	if [ $? -ne 0 ];
 	then
