@@ -48,6 +48,7 @@ do
 			cd /root/gitrepo/git/$gitrepo
 			rm -rf *
 			git init --bare
+			chown -R 33:33 *
 		fi
  		echo $job
 		cd /$job
