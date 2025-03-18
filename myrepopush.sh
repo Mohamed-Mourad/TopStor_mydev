@@ -30,6 +30,7 @@ then
 fi 
 flag=1
 echo branch $branch
+chown -R 33:33 /root/gitrepo/git  
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
 while [ $flag -ne 0 ];
 do
@@ -51,7 +52,6 @@ do
 			git init --bare
 			cd ..
 			echo chown -R 33:33 $gitrepo
-			chown -R 33:33 $gitrepo
 		fi
  		echo $job
 		cd /$job
