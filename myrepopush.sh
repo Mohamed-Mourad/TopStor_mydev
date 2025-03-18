@@ -12,6 +12,7 @@ fnupdate () {
 	then
 		fold=`pwd | awk -F'/' '{print $NF'`
 		echo something went wrong while updating $1 in directory $fold.... consult the devleloper
+		git remote remove myrepo
 		exit
 	fi
 	sync
