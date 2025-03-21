@@ -60,6 +60,24 @@ do
 	fi
 done
 echo running any needed scripts
+leaderip=`docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
+leader=`docker exec etcdclient /TopStor/etcdgetlocal.py leader`
+myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternode`
+stamp=`date +%s`
+/TopStor/etcddel.py $leaderip sync/cversion --prefix
+/TopStor/etcdput.py $leaderip sync/cversion/_${branch}__/request cversion_$stamp
+/TopStor/etcdput.py $leaderip sync/cversion/_${branch}__/request/$myhost cversion_$stamp
+/TopStor/getcversion.sh $leaderip $leader $myhost
+cd /TopStor
+commit=`git show --abbrev-commit | grep commit | head -1 | awk '{print $2}'`
+/TopStor/etcdput.py $leaderip cversion/$myhost $version-$commit
+echo $leader | grep $myhost
+if [ $? -ne 0 ];
+then
+	myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+	/TopStor/etcdput.py $myhostip cversion/$myhost $version-$commit
+fi
+/TopStor/myrepopush.sh $branch
 /TopStor/pre_apply.sh	
 cd /topstorweb
 git show | grep commit

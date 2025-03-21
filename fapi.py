@@ -750,9 +750,9 @@ def getcversion(data):
     global leaderip, leader, myhost
     if 'baduser' in data['response']:
       return {'response': 'baduser'}
-    cmdline='/TopStor/getcversion.sh '+leaderip+' '+leader+' '+myhost
+    #cmdline='/TopStor/getcversion.sh '+leaderip+' '+leader+' '+myhost
     #subprocess.run(cmdline,stdout=subprocess.PIPE)
-    postchange(cmdline)
+    #postchange(cmdline)
     cversions = get('cversion/'+myhost)[0]
     return { 'response':'Ok', 'cversion': str(cversions)}
 

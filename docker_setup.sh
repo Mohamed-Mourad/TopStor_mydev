@@ -554,6 +554,19 @@ docker run -itd --rm --privileged \
 #/TopStor/etcddel.py $myclusterip sync/diskref --prefix
 #/TopStor/etcdput.py $myclusterip sync/diskref/add_add_add______/request diskref_$stamp
 #/pace/diskref.sh $leader $myclusterip $myhost $mynodeip >/dev/null & disown 
+if [ $isprimary -ne 1 ];
+then
+ leaderversion=`/TopStor/etcdget.py $myclusterip cversion/$leader | awk -F'-' '{print $1}'`
+ myversion=`/TopStor/etcdget.py $myclusterip cversion/$myhost | awk -F'-' '{print $1}'`
+ echo c$leaderversion | grep c$myversion 
+ if [ $? -ne 0 ];
+ then
+	/TopStor/myrepopull.sh $leaderversion	
+ fi 
+else
+	BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)  # Get the current branch name
+	/TopStor/myrepopush.sh $BRANCH_NAME & disown
+fi
 	       echo I a hhhhhhhhhhhhhhhhhhhhhhhhere
 #if [ $isprimary -ne 0 ];
 #then
