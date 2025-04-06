@@ -43,8 +43,8 @@ download_nfs() {
 download_cifs() {
     SERVER=$1
     VERSION=$2
-    USERNAME="user"  # Replace with actual username
-    PASSWORD="password"  # Replace with actual password
+    USERNAME=$3
+    PASSWORD=$4
     MOUNT_POINT="/mnt/cifs_update"
 
     log "Mounting CIFS share from //$SERVER..."
@@ -75,6 +75,20 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
     SOURCE=$4
     VERSION=$6
 
+    # Initialize optional variables
+    CIFS_USERNAME=""
+    CIFS_PASSWORD=""
+
+    # Parse optional CIFS credentials
+    if [[ "$TYPE" == "cifs" ]]; then
+        if [[ "$7" == "--username" && -n "$8" && "$9" == "--password" && -n "${10}" ]]; then
+            CIFS_USERNAME=$8
+            CIFS_PASSWORD=${10}
+        else
+            error_exit "CIFS requires --username and --password."
+        fi
+    fi
+
     mkdir -p "$UPDATE_DEST"
 
     case $TYPE in
@@ -85,7 +99,7 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
             download_nfs "$SOURCE" "$VERSION"
             ;;
         cifs)
-            download_cifs "$SOURCE" "$VERSION"
+            download_cifs "$SOURCE" "$VERSION" "$CIFS_USERNAME" "$CIFS_PASSWORD"
             ;;
         local)
             download_local "$SOURCE"
@@ -97,7 +111,6 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
 
     log "Update process completed successfully."
 else
-    echo "Usage: $0 --source-type <http|nfs|cifs|local> --source <source_path_or_url> --version <version_identifier>"
+    echo "Usage: $0 --source-type <http|nfs|cifs|local> --source <path_or_url> --version <version> [--username <username> --password <password>]"
     exit 1
 fi
-
