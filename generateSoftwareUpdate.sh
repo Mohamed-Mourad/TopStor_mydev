@@ -1,10 +1,29 @@
-#!/bin/bash
+#!/usr/bin/sh
 
 # Check if a version argument is provided
 if [ -z "$1" ]; then
     echo "Usage: $0 <version_name>"
     exit 1
 fi
+
+# Commit any changes
+
+commit_changes(){
+        git add --all
+        git rm -rf __py*
+        git commit -am 'Software Update' --allow-empty
+        git checkout -b $1
+        git checkout  $1
+}
+
+commit_changes $1
+cd /pace
+commit_changes $1
+cd /topstorweb
+commit_changes $1
+cd /TopStor
+
+### Compress and encrypt all repos
 
 # Define directory paths
 repo1="/TopStor"
@@ -29,6 +48,8 @@ mv "$encrypted_filename" "$output_dir"
 
 # Clean up the unencrypted zip file
 rm "$zip_filename"
+
+### TODO: myrepopush
 
 # Output result
 echo "The repositories have been packaged, encrypted, and saved to $output_dir/$encrypted_filename"
