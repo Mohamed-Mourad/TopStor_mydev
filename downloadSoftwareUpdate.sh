@@ -21,36 +21,46 @@ download_http() {
 
 download_nfs() {
     SERVER=$1
+    VERSION=$2
     MOUNT_POINT="/mnt/nfs_update"
-    
+
     log "Mounting NFS share from $SERVER..."
     mkdir -p $MOUNT_POINT
-    mount -t nfs $SERVER $MOUNT_POINT || error_exit "Failed to mount NFS."
-    
-    log "Copying update..."
-    cp -r $MOUNT_POINT/* "$UPDATE_DEST" || error_exit "Failed to copy from NFS."
-    
-    log "Unmounting..."
-    umount $MOUNT_POINT
-    rm -rf $MOUNT_POINT
+    mount -t nfs "$SERVER" "$MOUNT_POINT" || error_exit "Failed to mount NFS."
+
+    log "Searching for update file with version $VERSION..."
+    FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
+    [[ -z "$FILE" ]] && error_exit "No update file found for version $VERSION on NFS."
+
+    log "Copying update file $FILE..."
+    cp "$FILE" "$UPDATE_DEST" || error_exit "Failed to copy file from NFS."
+
+    log "Unmounting NFS..."
+    umount "$MOUNT_POINT"
+    rm -rf "$MOUNT_POINT"
 }
 
 download_cifs() {
     SERVER=$1
+    VERSION=$2
     USERNAME="user"  # Replace with actual username
     PASSWORD="password"  # Replace with actual password
     MOUNT_POINT="/mnt/cifs_update"
-    
-    log "Mounting CIFS share from $SERVER..."
-    mkdir -p $MOUNT_POINT
-    mount -t cifs $SERVER $MOUNT_POINT -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
-    
-    log "Copying update..."
-    cp -r $MOUNT_POINT/* "$UPDATE_DEST" || error_exit "Failed to copy from CIFS."
-    
-    log "Unmounting..."
-    umount $MOUNT_POINT
-    rm -rf $MOUNT_POINT
+
+    log "Mounting CIFS share from //$SERVER..."
+    mkdir -p "$MOUNT_POINT"
+    mount -t cifs "//$SERVER" "$MOUNT_POINT" -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
+
+    log "Searching for update file with version $VERSION..."
+    FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
+    [[ -z "$FILE" ]] && error_exit "No update file found for version $VERSION on CIFS."
+
+    log "Copying update file $FILE..."
+    cp "$FILE" "$UPDATE_DEST" || error_exit "Failed to copy file from CIFS."
+
+    log "Unmounting CIFS..."
+    umount "$MOUNT_POINT"
+    rm -rf "$MOUNT_POINT"
 }
 
 download_local() {
@@ -60,25 +70,34 @@ download_local() {
 }
 
 # Main script execution
-if [[ "$1" == "--source" && -n "$2" ]]; then
-    SOURCE=$2
+if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5" == "--version" && -n "$6" ]]; then
+    TYPE=$2
+    SOURCE=$4
+    VERSION=$6
+
     mkdir -p "$UPDATE_DEST"
-    
-    if [[ $SOURCE == http* ]]; then
-        download_http "$SOURCE" "$UPDATE_DEST"
-    elif [[ $SOURCE == nfs* ]]; then
-        download_nfs "$SOURCE"
-    elif [[ $SOURCE == cifs* ]]; then
-        download_cifs "$SOURCE"
-    elif [[ -d $SOURCE || -f $SOURCE ]]; then
-        download_local "$SOURCE"
-    else
-        error_exit "Unsupported source type."
-    fi
-    
+
+    case $TYPE in
+        http)
+            download_http "$SOURCE" "$UPDATE_DEST"
+            ;;
+        nfs)
+            download_nfs "$SOURCE" "$VERSION"
+            ;;
+        cifs)
+            download_cifs "$SOURCE" "$VERSION"
+            ;;
+        local)
+            download_local "$SOURCE"
+            ;;
+        *)
+            error_exit "Unsupported source type: $TYPE"
+            ;;
+    esac
+
     log "Update process completed successfully."
 else
-    echo "Usage: $0 --source <http|nfs|cifs|local_path>"
+    echo "Usage: $0 --source-type <http|nfs|cifs|local> --source <source_path_or_url> --version <version_identifier>"
     exit 1
 fi
 
