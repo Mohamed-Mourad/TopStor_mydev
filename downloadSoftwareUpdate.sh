@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UPDATE_DEST="/opt/software_update"
+UPDATE_DEST="TopStordata/"
 LOGFILE="/var/log/update_script.log"
 
 log() {
