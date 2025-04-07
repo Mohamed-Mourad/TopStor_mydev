@@ -1615,7 +1615,7 @@ def updateSoftware(data):
         password = data.get('password')
         cmndstring += f' --username {username} --password {password}'
     
-    # postchange(cmndstring,data['owner'])
+    postchange(cmndstring)
     return {'data': cmndstring}
 
 leaderip =0 
