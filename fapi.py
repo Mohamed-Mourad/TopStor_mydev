@@ -1595,6 +1595,29 @@ def getAllConfigFiles(data):
             zipF.write(file[0], file[1] ,compress_type = zipfile.ZIP_DEFLATED)
     return send_file(zipfilePath, as_attachment=True)
 
+@app.route('/api/v1/software/update', methods=['GET','POST'])
+@login_required
+def updateSoftware(data):
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
+  
+    sourceType = data['source-type']
+    source = data['source']
+    version = data.get('version')
+
+    cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source}'
+
+    if version:
+        cmndstring += f' --version {version}'
+    
+    if sourceType == 'cifs':
+        username = data.get('username')
+        password = data.get('password')
+        cmndstring += f' --username {username} --password {password}'
+    
+    # postchange(cmndstring,data['owner'])
+    return {'data': cmndstring}
+
 leaderip =0 
 myhost=0
 if __name__=='__main__':
