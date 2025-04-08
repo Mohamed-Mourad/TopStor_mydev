@@ -1600,10 +1600,10 @@ def getAllConfigFiles(data):
 def updateSoftware(data):
     if 'baduser' in data['response']:
       return {'response': 'baduser'}
-  
-    sourceType = data['source-type']
-    source = data['source']
-    location = data['location']
+
+    sourceType = data.get('source-type')
+    source = data.get('source')
+    location = data.get('location')
     version = data.get('version')
 
     cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source} --location {location}'
@@ -1619,6 +1619,24 @@ def updateSoftware(data):
     postchange(cmndstring, 'leader')
     return {'data': cmndstring}
 
+@app.route('/api/v1/software/localFileUpdate', methods=['GET','POST'])
+@login_required
+def localFileUpdate(data):
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
+    
+    uploaded_file = request.files['file']
+    if uploaded_file.filename != '':
+        dirPath = '/TopStor/TopStordata'
+        isExist = os.path.exists(dirPath)
+        if not isExist:
+            os.makedirs(dirPath)
+        filename =  uploaded_file.filename.replace(' ', '')
+        filePath = os.path.join(dirPath, filename)
+        uploaded_file.save(filePath)
+        return {"data": 'success'}
+    return {"data": data}
+  
 leaderip =0 
 myhost=0
 if __name__=='__main__':
