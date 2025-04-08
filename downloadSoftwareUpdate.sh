@@ -72,10 +72,11 @@ download_local() {
 }
 
 # Main script execution
-if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5" == "--version" && -n "$6" ]]; then
+if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5" == "--location" && -n "$6" && "$7" == "--version" && -n "$8" ]]; then
     TYPE=$2
     SOURCE=$4
-    VERSION=$6
+    LOCATION=$6
+    VERSION=$8
 
     # Initialize optional variables
     CIFS_USERNAME=""
@@ -83,9 +84,9 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
 
     # Parse optional CIFS credentials
     if [[ "$TYPE" == "cifs" ]]; then
-        if [[ "$7" == "--username" && -n "$8" && "$9" == "--password" && -n "${10}" ]]; then
-            CIFS_USERNAME=$8
-            CIFS_PASSWORD=${10}
+        if [[ "$9" == "--username" && -n ${10} && "${11}" == "--password" && -n "${12}" ]]; then
+            CIFS_USERNAME=${10}
+            CIFS_PASSWORD=${12}
         else
             error_exit "CIFS requires --username and --password."
         fi
