@@ -1603,7 +1603,7 @@ def updateSoftware(data):
   
     sourceType = data['source-type']
     source = data['source']
-l   location = data['location']
+    location = data['location']
     version = data.get('version')
 
     cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source} --location {location}'
