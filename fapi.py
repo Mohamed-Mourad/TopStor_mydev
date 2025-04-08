@@ -1603,9 +1603,10 @@ def updateSoftware(data):
   
     sourceType = data['source-type']
     source = data['source']
+l   location = data['location']
     version = data.get('version')
 
-    cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source}'
+    cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source} --location {location}'
 
     if version:
         cmndstring += f' --version {version}'
@@ -1615,7 +1616,7 @@ def updateSoftware(data):
         password = data.get('password')
         cmndstring += f' --username {username} --password {password}'
     
-    postchange(cmndstring)
+    postchange(cmndstring, 'leader')
     return {'data': cmndstring}
 
 leaderip =0 

@@ -21,12 +21,13 @@ download_http() {
 
 download_nfs() {
     SERVER=$1
-    VERSION=$2
+    LOCATION=$2
+    VERSION=$3
     MOUNT_POINT="/mnt/nfs_update"
 
     log "Mounting NFS share from $SERVER..."
     mkdir -p $MOUNT_POINT
-    mount -t nfs "$SERVER" "$MOUNT_POINT" || error_exit "Failed to mount NFS."
+    mount -t nfs "$SERVER:/$LOCATION" "$MOUNT_POINT" || error_exit "Failed to mount NFS."
 
     log "Searching for update file with version $VERSION..."
     FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
@@ -42,14 +43,15 @@ download_nfs() {
 
 download_cifs() {
     SERVER=$1
-    VERSION=$2
-    USERNAME=$3
-    PASSWORD=$4
+    LOCATION=$2
+    VERSION=$3
+    USERNAME=$4
+    PASSWORD=$5
     MOUNT_POINT="/mnt/cifs_update"
 
     log "Mounting CIFS share from //$SERVER..."
     mkdir -p "$MOUNT_POINT"
-    mount -t cifs "//$SERVER" "$MOUNT_POINT" -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
+    mount -t cifs "//$SERVER:/$LOCATION" "$MOUNT_POINT" -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
 
     log "Searching for update file with version $VERSION..."
     FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
@@ -96,10 +98,10 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
             download_http "$SOURCE" "$UPDATE_DEST"
             ;;
         nfs)
-            download_nfs "$SOURCE" "$VERSION"
+            download_nfs "$SOURCE" "$LOCATION" "$VERSION"
             ;;
         cifs)
-            download_cifs "$SOURCE" "$VERSION" "$CIFS_USERNAME" "$CIFS_PASSWORD"
+            download_cifs "$SOURCE" "$LOCATION" "$VERSION" "$CIFS_USERNAME" "$CIFS_PASSWORD"
             ;;
         local)
             download_local "$SOURCE"
