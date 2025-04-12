@@ -1,5 +1,5 @@
 #!/bin/bash
-echo $@ > /root/unixdeluser
+echo $@ > /root/unixchangeuser
 export ETCDCTL_API=3
 cd /TopStor
 
@@ -10,6 +10,15 @@ pool=`echo $@  | awk '{print $4}'`;
 volume=`echo $@  | awk '{print $5}'`;
 userreq=`echo $@  | awk '{print $6}'`;
 
+volip=`cat /$pool/exports.$volume | grep SUMMARY | awk -F'/' '{print $14'}`
+resname='NFS-'$volip
+cat /$pool/exports.$volume | grep $username
+if [ $? -eq 0 ];
+then
+ 
+	docker exec etcdclient /TopStor/logmsg.py Tenantst04 error $userreq $username $volume
+	exit
+fi
 docker exec etcdclient /TopStor/logmsg.py Tenantst03 info $userreq $username $volume 
 sed -i "s/,$username//g" /$pool'/group_'$volume
 sed -i "s/:$username/:/g" /$pool'/group_'$volume
@@ -21,5 +30,6 @@ fi
 
 sed -i "s/:,/:/g" /$pool'/group_'$volume
 
+docker restart $resname
 docker exec etcdclient /TopStor/logmsg.py Tenantsu03 info $userreq $username $volume 
 /TopStor/TenantUserList $leaderip $volume $pool

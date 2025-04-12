@@ -7,6 +7,17 @@ userreq=`echo $@  | awk '{print $2}'`;
 pool=`echo $@  | awk '{print $3}'`;
 volume=`echo $@  | awk '{print $4}'`;
 username=`echo $@ | awk '{print $5}'`;
+
+
+cat /$pool/exports.$volume | grep $username
+if [ $? -eq 0 ];
+then
+ 
+	docker exec etcdclient /TopStor/logmsg.py Tenantst04 error $userreq $username $volume
+	exit
+fi
+volip=`cat /$pool/exports.$volume | grep SUMMARY | awk -F'/' '{print $14'}`
+resname='NFS-'$volip
 docker exec etcdclient /TopStor/logmsg.py Tenantst02 info $userreq $username $volume 
 sed -i "/$username/d" /$pool'/user_'$volume
 sed -i "s/,$username//g" /$pool'/group_'$volume
@@ -14,11 +25,12 @@ sed -i "s/:$username/:/g" /$pool'/group_'$volume
 sed -i "s/$username,//g" /$pool'/group_'$volume
 sed -i "s/:,/:/g" /$pool'/group_'$volume
 sed -i  "/$username/d" /$pool'/group_'$volume
-docker exec $container cat /etc/passwd | grep $username
+docker exec $resname cat /etc/passwd | grep $username
 if [ $? -ne 0 ];
 then	
 	docker exec etcdclient /TopStor/logmsg.py Tenantsu02 info $userreq $username $volume 
 else
 	docker exec etcdclient /TopStor/logmsg.py Tenantfa02 error $userreq $username $volume 
 fi
+docker restart $resname
 /TopStor/TenantUserList $leaderip $volume $pool

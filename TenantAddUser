@@ -9,6 +9,8 @@ volume=`echo $@  | awk '{print $4}'`;
 username=`echo $@ | awk '{print $5}'`;
 userid=`echo $@ | awk '{print $6}'`;
 grp=`echo $@ | awk '{print $7}'`;
+volip=`cat /$pool/exports.$volume | grep SUMMARY | awk -F'/' '{print $14'}`
+resname='NFS-'$volip
 docker exec etcdclient /TopStor/logmsg.py Tenantst01 info $userreq $username $volume 
 cat /$pool'/user_'$volume | grep $username
 if [ $? -eq 0 ];
@@ -26,11 +28,13 @@ echo $grp | grep 'NoGroup'
 if [ $? -ne 0 ];
 then
 	grp=`tail /$pool/group_$volume -n 1 | awk -F':' '{print $1}'`
-	sed -i "/^${grp}:/s/$/,${username}/" /$pool'/group_'$volume
-	sed -i "s/:,/:/g" /$pool'/group_'$volume
+	sed -i "/^${grp}:/s/$/,${username}/" /$pool/'group_'$volume
+	sed -i "s/:,/:/g" /$pool/'group_'$volume
 fi
-echo "$username:x:$userid:$userid:$username:/NoHome:/sbin/nologin" >> /$pool'/user_'$volume
-cat /$pool'/user_'$volume | grep $username
+#echo "$username:x:$userid:$userid:$username:/NoHome:/sbin/nologin" >> /$pool'/user_'$volume
+echo "$username:x:$userid:$userid:$username:/NoHome:/sbin/nologin" >> /$pool/'user_'$volume
+docker restart $resname
+docker exec $resname cat /etc/passwd | grep $username
 if [ $? -eq 0 ];
 then	
 	docker exec etcdclient /TopStor/logmsg.py Tenantsu01 info $userreq $username $volume 
