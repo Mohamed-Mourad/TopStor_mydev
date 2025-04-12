@@ -39,33 +39,9 @@ done
 flag=0
 nmcli conn mod cmynode +ipv4.addresses ${ipaddr}/$ipsubnet
 nmcli conn up cmynode
-docker run -d $mounts --rm --privileged \
-  		-e "HOSTIP=$ipaddr"  \
-		-e SHARED_DIRECTORY=$share \
-  		-p $ipaddr:2049:2049/tcp \
-  		-v /TopStor/:/TopStor \
-		-v $pool'/user_'$volume:/etc/passwd:rw \
-		-v $pool'/group_'$volume:/etc/group:rw \
-  		--name $resname itsthenetwork/nfs-server-alpine
-counter=20
-while [ $counter -gt 1 ];
-do
-	counter=$((counter-1))
-	sleep 1
-	docker logs $resname | grep 'Startup successful'
-	if [ $? -eq 0 ];
-	then
-		counter=0
-	fi
-done
-if [ $counter -eq 1 ];
-then
-	docker logs $resname > /root/failedNFScontainer
-else
-	
-	writes=${writes#_vol_}
-	while [[ $writes == *_vol_* ]]; do
-		current_volinfo=${writes%%_vol_*}
+	writes2=${writes#_vol_}
+	while [[ $writes2 == *_vol_* ]]; do
+		current_volinfo=${writes2%%_vol_*}
 		vol=`echo $current_volinfo | awk -F'_u_' '{print $1}'`
 		rootname=`echo $current_volinfo | awk -F'_u_' '{print $2}' | awk -F':' '{print $1}'`
 		rootid=`echo $current_volinfo | awk -F'_u_' '{print $2}' | awk -F':' '{print $2}'`
@@ -94,6 +70,41 @@ else
 				fi
 			fi
 		fi	
+		writes2=${writes2#*_vol_}
+	done
+
+docker run -d $mounts --rm --privileged \
+  		-e "HOSTIP=$ipaddr"  \
+		-e SHARED_DIRECTORY=$share \
+  		-p $ipaddr:2049:2049/tcp \
+  		-v /TopStor/:/TopStor \
+		-v $pool'/user_'$volume:/etc/passwd:rw \
+		-v $pool'/group_'$volume:/etc/group:rw \
+  		--name $resname itsthenetwork/nfs-server-alpine
+counter=20
+while [ $counter -gt 1 ];
+do
+	counter=$((counter-1))
+	sleep 1
+	docker logs $resname | grep 'Startup successful'
+	if [ $? -eq 0 ];
+	then
+		counter=0
+	fi
+done
+if [ $counter -eq 1 ];
+then
+	docker logs $resname > /root/failedNFScontainer
+else
+	writes=${writes#_vol_}
+	while [[ $writes == *_vol_* ]]; do
+		current_volinfo=${writes%%_vol_*}
+		vol=`echo $current_volinfo | awk -F'_u_' '{print $1}'`
+		rootname=`echo $current_volinfo | awk -F'_u_' '{print $2}' | awk -F':' '{print $1}'`
+		rootid=`echo $current_volinfo | awk -F'_u_' '{print $2}' | awk -F':' '{print $2}'`
+		groupname=`echo $current_volinfo | awk -F'_u_' '{print $3}' | awk -F':' '{print $1}'`
+		groupid=`echo $current_volinfo | awk -F'_u_' '{print $3}' | awk -F':' '{print $2}'`
+		
  		docker exec $resname chown $rootname $vol 
  		docker exec $resname chgrp $groupname $vol 
  		docker exec $resname chmod 770 $vol 
