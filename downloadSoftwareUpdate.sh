@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UPDATE_DEST="/opt/software_update"
+UPDATE_DEST="TopStordata/"
 LOGFILE="/var/log/update_script.log"
 
 log() {
@@ -21,36 +21,48 @@ download_http() {
 
 download_nfs() {
     SERVER=$1
+    LOCATION=$2
+    VERSION=$3
     MOUNT_POINT="/mnt/nfs_update"
-    
+
     log "Mounting NFS share from $SERVER..."
     mkdir -p $MOUNT_POINT
-    mount -t nfs $SERVER $MOUNT_POINT || error_exit "Failed to mount NFS."
-    
-    log "Copying update..."
-    cp -r $MOUNT_POINT/* "$UPDATE_DEST" || error_exit "Failed to copy from NFS."
-    
-    log "Unmounting..."
-    umount $MOUNT_POINT
-    rm -rf $MOUNT_POINT
+    mount -t nfs "$SERVER:/$LOCATION" "$MOUNT_POINT" || error_exit "Failed to mount NFS."
+
+    log "Searching for update file with version $VERSION..."
+    FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
+    [[ -z "$FILE" ]] && error_exit "No update file found for version $VERSION on NFS."
+
+    log "Copying update file $FILE..."
+    cp "$FILE" "$UPDATE_DEST" || error_exit "Failed to copy file from NFS."
+
+    log "Unmounting NFS..."
+    umount "$MOUNT_POINT"
+    rm -rf "$MOUNT_POINT"
 }
 
 download_cifs() {
     SERVER=$1
-    USERNAME="user"  # Replace with actual username
-    PASSWORD="password"  # Replace with actual password
+    LOCATION=$2
+    VERSION=$3
+    USERNAME=$4
+    PASSWORD=$5
     MOUNT_POINT="/mnt/cifs_update"
-    
-    log "Mounting CIFS share from $SERVER..."
-    mkdir -p $MOUNT_POINT
-    mount -t cifs $SERVER $MOUNT_POINT -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
-    
-    log "Copying update..."
-    cp -r $MOUNT_POINT/* "$UPDATE_DEST" || error_exit "Failed to copy from CIFS."
-    
-    log "Unmounting..."
-    umount $MOUNT_POINT
-    rm -rf $MOUNT_POINT
+
+    log "Mounting CIFS share from //$SERVER..."
+    mkdir -p "$MOUNT_POINT"
+    mount -t cifs "//$SERVER:/$LOCATION" "$MOUNT_POINT" -o username=$USERNAME,password=$PASSWORD || error_exit "Failed to mount CIFS."
+
+    log "Searching for update file with version $VERSION..."
+    FILE=$(find "$MOUNT_POINT" -type f -name "*${VERSION}*" | head -n 1)
+    [[ -z "$FILE" ]] && error_exit "No update file found for version $VERSION on CIFS."
+
+    log "Copying update file $FILE..."
+    cp "$FILE" "$UPDATE_DEST" || error_exit "Failed to copy file from CIFS."
+
+    log "Unmounting CIFS..."
+    umount "$MOUNT_POINT"
+    rm -rf "$MOUNT_POINT"
 }
 
 download_local() {
@@ -60,25 +72,55 @@ download_local() {
 }
 
 # Main script execution
-if [[ "$1" == "--source" && -n "$2" ]]; then
-    SOURCE=$2
-    mkdir -p "$UPDATE_DEST"
-    
-    if [[ $SOURCE == http* ]]; then
-        download_http "$SOURCE" "$UPDATE_DEST"
-    elif [[ $SOURCE == nfs* ]]; then
-        download_nfs "$SOURCE"
-    elif [[ $SOURCE == cifs* ]]; then
-        download_cifs "$SOURCE"
-    elif [[ -d $SOURCE || -f $SOURCE ]]; then
-        download_local "$SOURCE"
-    else
-        error_exit "Unsupported source type."
+if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" ]]; then
+    TYPE=$2
+    SOURCE=$4
+    VERSION=$6
+    LOCATION=$8
+    # Initialize optional variables
+    CIFS_USERNAME=""
+    CIFS_PASSWORD=""
+
+    # Parse optional CIFS credentials
+    if [[ "$TYPE" == "cifs" ]]; then
+        if [[ "$9" == "--username" && -n ${10} && "${11}" == "--password" && -n "${12}" ]]; then
+            CIFS_USERNAME=${10}
+            CIFS_PASSWORD=${12}
+        else
+            error_exit "CIFS requires --username and --password."
+        fi
     fi
-    
+
+    if [[ "$TYPE" == "cifs" || "$TYPE" == "nfs" ]]; then
+	if [[ "$7" == "--location" && -n "$8" ]]; then
+	    LOCATION=$8
+        else 
+	    error_exit "$TYPE requires --location" 
+	fi
+    fi
+
+    mkdir -p "$UPDATE_DEST"
+
+    case $TYPE in
+        http)
+            download_http "$SOURCE" "$UPDATE_DEST"
+            ;;
+        nfs)
+            download_nfs "$SOURCE" "$LOCATION" "$VERSION"
+            ;;
+        cifs)
+            download_cifs "$SOURCE" "$LOCATION" "$VERSION" "$CIFS_USERNAME" "$CIFS_PASSWORD"
+            ;;
+        local)
+            download_local "$SOURCE"
+            ;;
+        *)
+            error_exit "Unsupported source type: $TYPE"
+            ;;
+    esac
+
     log "Update process completed successfully."
 else
-    echo "Usage: $0 --source <http|nfs|cifs|local_path>"
+    echo "Usage: $0 --source-type <http|nfs|cifs|local> --source <path_or_url> --version <version> [--username <username> --password <password>]"
     exit 1
 fi
-

@@ -1595,6 +1595,56 @@ def getAllConfigFiles(data):
             zipF.write(file[0], file[1] ,compress_type = zipfile.ZIP_DEFLATED)
     return send_file(zipfilePath, as_attachment=True)
 
+@app.route('/api/v1/software/update', methods=['GET','POST'])
+@login_required
+def updateSoftware(data):
+    if data.get('response') == 'baduser':
+        return {'response': 'baduser'}
+
+    source_type = data.get('source-type')
+    source = data.get('source')
+    location = data.get('location')
+    version = data.get('version')
+
+    command = ['./downloadSoftwareUpdate.sh', f'--source-type {source_type}', f'--source {source}']
+
+    if version:
+        command.append(f'--version {version}')
+
+    if source_type == 'cifs':
+        username = data.get('username')
+        password = data.get('password')
+        command.extend([
+            f'--location {location}',
+            f'--username {username}',
+            f'--password {password}'
+        ])
+    elif source_type == 'nfs':
+        command.append(f'--location {location}')
+
+    command_string = ' '.join(command)
+    postchange(command_string, 'leader')
+
+    return {'data': command_string}
+
+@app.route('/api/v1/software/localFileUpdate', methods=['GET','POST'])
+@login_required
+def localFileUpdate(data):
+    if 'baduser' in data['response']:
+      return {'response': 'baduser'}
+    
+    uploaded_file = request.files['file']
+    if uploaded_file.filename != '':
+        dirPath = '/TopStor/TopStordata'
+        isExist = os.path.exists(dirPath)
+        if not isExist:
+            os.makedirs(dirPath)
+        filename =  uploaded_file.filename.replace(' ', '')
+        filePath = os.path.join(dirPath, filename)
+        uploaded_file.save(filePath)
+        return {"data": 'success'}
+    return {"data": uploaded_file.filename}
+  
 leaderip =0 
 myhost=0
 if __name__=='__main__':
