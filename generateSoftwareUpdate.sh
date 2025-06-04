@@ -1,11 +1,9 @@
 #!/usr/bin/sh
 
 # Check if a version argument is provided
-if [ -z "$1" ]; then
-    echo "Usage: $0 <version_name>  # the version should be the current running version"
-    exit 1
-fi
 
+cd /TopStor/
+currentbranch=`git branch | grep '*' | awk '{print $NF}' | awk -F'_' '{print $1}'`
 
 ### Compress and encrypt all repos
 
@@ -14,7 +12,7 @@ repo1="/TopStor"
 repo2="/pace"
 repo3="/topstorweb"
 output_dir="/TopStordata"
-zip_filename="software_update_$1.zip"
+zip_filename="software_update_$currentbranch.zip"
 encrypted_filename="$zip_filename.enc"
 encryption_password="your_password"  # Replace with your own password
 
