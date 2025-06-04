@@ -29,7 +29,7 @@ cd /TopStor
 repo1="/TopStor"
 repo2="/pace"
 repo3="/topstorweb"
-output_dir="TopStordata"
+output_dir="/TopStordata"
 zip_filename="software_update_$1.zip"
 encrypted_filename="$zip_filename.enc"
 encryption_password="your_password"  # Replace with your own password
