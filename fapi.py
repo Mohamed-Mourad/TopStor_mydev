@@ -1598,26 +1598,34 @@ def getAllConfigFiles(data):
 @app.route('/api/v1/software/update', methods=['GET','POST'])
 @login_required
 def updateSoftware(data):
-    if 'baduser' in data['response']:
-      return {'response': 'baduser'}
+    if data.get('response') == 'baduser':
+        return {'response': 'baduser'}
 
-    sourceType = data.get('source-type')
+    source_type = data.get('source-type')
     source = data.get('source')
     location = data.get('location')
     version = data.get('version')
 
-    cmndstring = f'./downloadSoftwareUpdate.sh --source-type {sourceType} --source {source} --location {location}'
+    command = ['./downloadSoftwareUpdate.sh', f'--source-type {source_type}', f'--source {source}']
 
     if version:
-        cmndstring += f' --version {version}'
-    
-    if sourceType == 'cifs':
+        command.append(f'--version {version}')
+
+    if source_type == 'cifs':
         username = data.get('username')
         password = data.get('password')
-        cmndstring += f' --username {username} --password {password}'
-    
-    postchange(cmndstring, 'leader')
-    return {'data': cmndstring}
+        command.extend([
+            f'--location {location}',
+            f'--username {username}',
+            f'--password {password}'
+        ])
+    elif source_type == 'nfs':
+        command.append(f'--location {location}')
+
+    command_string = ' '.join(command)
+    postchange(command_string, 'leader')
+
+    return {'data': command_string}
 
 @app.route('/api/v1/software/localFileUpdate', methods=['GET','POST'])
 @login_required
@@ -1635,7 +1643,7 @@ def localFileUpdate(data):
         filePath = os.path.join(dirPath, filename)
         uploaded_file.save(filePath)
         return {"data": 'success'}
-    return {"data": data}
+    return {"data": uploaded_file.filename}
   
 leaderip =0 
 myhost=0

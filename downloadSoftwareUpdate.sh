@@ -72,12 +72,11 @@ download_local() {
 }
 
 # Main script execution
-if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5" == "--location" && -n "$6" && "$7" == "--version" && -n "$8" ]]; then
+if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" ]]; then
     TYPE=$2
     SOURCE=$4
-    LOCATION=$6
-    VERSION=$8
-
+    VERSION=$6
+    LOCATION=$8
     # Initialize optional variables
     CIFS_USERNAME=""
     CIFS_PASSWORD=""
@@ -90,6 +89,14 @@ if [[ "$1" == "--source-type" && -n "$2" && "$3" == "--source" && -n "$4" && "$5
         else
             error_exit "CIFS requires --username and --password."
         fi
+    fi
+
+    if [[ "$TYPE" == "cifs" || "$TYPE" == "nfs" ]]; then
+	if [[ "$7" == "--location" && -n "$8" ]]; then
+	    LOCATION=$8
+        else 
+	    error_exit "$TYPE requires --location" 
+	fi
     fi
 
     mkdir -p "$UPDATE_DEST"
