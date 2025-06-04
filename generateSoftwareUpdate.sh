@@ -2,26 +2,10 @@
 
 # Check if a version argument is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 <version_name>"
+    echo "Usage: $0 <version_name>  # the version should be the current running version"
     exit 1
 fi
 
-# Commit any changes
-
-commit_changes(){
-        git add --all
-        git rm -rf __py*
-        git commit -am 'Software Update' --allow-empty
-        git checkout -b $1
-        git checkout  $1
-}
-
-commit_changes $1
-cd /pace
-commit_changes $1
-cd /topstorweb
-commit_changes $1
-cd /TopStor
 
 ### Compress and encrypt all repos
 
