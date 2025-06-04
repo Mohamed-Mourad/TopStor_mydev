@@ -1,3 +1,4 @@
+
 #!/bin/bash
 
 # Check if a version argument is provided
@@ -9,7 +10,7 @@ fi
 ### Decrypt and extract updates
 
 # Define file paths
-output_dir="TopStordata"
+output_dir="/TopStordata"
 encrypted_filename="$output_dir/software_update_$1.zip.enc"
 zip_filename="$output_dir/software_update_$1.zip"
 encryption_password="your_password"  # Replace with your own password

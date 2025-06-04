@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UPDATE_DEST="TopStordata/"
+UPDATE_DEST="/TopStordata/"
 LOGFILE="/var/log/update_script.log"
 
 log() {
