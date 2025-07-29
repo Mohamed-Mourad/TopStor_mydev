@@ -49,25 +49,6 @@ echo iam in >> /root/tmp2
  /pace/etcdput.py $leaderip requests/DGdestroypool/$myhost $myhost/$userreq
  docker exec etcdclient /TopStor/logqueue.py `basename "$0"` running $userreq 
  docker exec etcdclient /TopStor/logmsg.py DGst5 info $userreq $pool
- waiting=1
- while [ $waiting -eq 1 ];
- do
-  sleep 1
-  pgrep zpool
-  if [ $? -ne 0 ];
-  then
-   waiting=0
-  fi
- done
- echo iam here2 >> /root/tmp2
- /sbin/zpool export -f $pool
- sleep 1
- /sbin/zpool import $pool
- sleep 1
- /sbin/zpool destroy -f $pool 2>/root/dgdestroyerror
- if [ $? -ne 0 ]; then
-   docker exec etcdclient /TopStor/logmsg.py DGfa5 error $userreq $pool
- else
   stamp=`date +%s`
   ETCDCTL_API=3 /pace/etcddel.py $leaderip ActPools/$pool 
   ETCDCTL_API=3 /pace/etcddel.py $leaderip sync/ActPool/ ${pool} 
@@ -94,8 +75,17 @@ echo iam in >> /root/tmp2
   ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/all/request/$leader volumes_$stamp 
 
   echo > /etc/exports
-   docker exec etcdclient /TopStor/logmsg.py DGsu5 info $userreq $pool
- fi 
+ fi
+ echo iam here2 >> /root/tmp2
+ /sbin/zpool export -f $pool
+ sleep 1
+ /sbin/zpool import $pool
+ sleep 1
+ /sbin/zpool destroy -f $pool 2>/root/dgdestroyerror
+ if [ $? -ne 0 ]; then
+   docker exec etcdclient /TopStor/logmsg.py DGfa5 error $userreq $pool
+ else
+   docker exec etcdclient /TopStor/logmsg.py DGsu5 info $userreq $pool 
 fi
 /pace/etcddel.py $leaderip requests/DGdestroypool/$myhost $myhost/$userreq
 #systemctl restart zfs-zed
