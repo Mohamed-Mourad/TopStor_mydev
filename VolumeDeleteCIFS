@@ -39,6 +39,8 @@ then
  /sbin/zfs unmount -f $pDG/$volname 
  /sbin/zfs destroy -rf $pDG/$volname 
  if [ $? -ne 0  ]; then
+   hostnode=$(docker exec etcdclient /TopStor/etcdgetlocal.py clusternode)
+   ETCDCTL_API=3 /pace/etcdput.py $leaderip cVolToDelete/$hostnode "$pDG|$volname|$userreq|$(basename "$0")"
    docker exec etcdclient /TopStor/logmsg.py NFS1001 error $userreq $volname
    echo /sbin/zfs destroy -rf $pDG/$volname >/root/errorVolumeDeleteCIFS
    docker exec etcdclient /TopStor/logqueue.py `basename "$0"` stop $userreq
