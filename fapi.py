@@ -905,6 +905,13 @@ def volumecreate(data):
   data['chappas']='MezoAdmin'
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['portalport']+' '+data['initiators']+' '+data['chapuser']+' '+data['chappas']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
  elif 'CIFSdom' in data['type']:
+
+  my_logger.info(f"About to run: cmdline command")
+  cmdline=['/TopStor/encthis.sh',data["domname"],data["dompass"]]
+  my_logger.info(f"cmdline Command completed")
+  data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
+  my_logger.info("subprocess done")
+
   # Handle domain server resolution if only name is provided
   my_logger.info("Entering domsrv IF now")
 
@@ -913,17 +920,12 @@ def volumecreate(data):
    resolved_ip = resolve_domain_server(data['domsrv'])
    if not resolved_ip:
     my_logger.info("LOG 2 e - ERROR resolving domsrv to IP")
-    return {'response': 'DNS resolution failed'}
    data['domip'] = resolved_ip
-   data['domsrv'] = None
+   data['domsrv'] = ''
    my_logger.info(f"LOG 3 s - SUCCESS resolving IP: {data['domip']}")
-  else:
-   my_logger.info("LOG 1 e - domsrv detection failed")
-
-  cmdline=['/TopStor/encthis.sh',data["domname"],data["dompass"]]
-  data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
 
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
+
  elif 'NFS' in data['type']:
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['rootname']+' '+data['rootid']+' '+data['groupname']+' '+data['groupid']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
 
