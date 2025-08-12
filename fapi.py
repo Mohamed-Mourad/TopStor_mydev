@@ -27,6 +27,41 @@ import logmsg
 from collectNodeConfig import getConfig, downloadConfig
 import zipfile
 from time import sleep
+import socket
+import logging
+
+# Create your own logger
+my_logger = logging.getLogger('my_logger')
+my_logger.setLevel(logging.INFO)  # Set the log level
+
+# Create file handler
+handler = logging.FileHandler('/TopStor/mylogfile.log')  # Change to desired path
+handler.setLevel(logging.INFO)
+
+# Create formatter and add it to the handler
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Add handler to the logger
+my_logger.addHandler(handler)
+
+def resolve_domain_server(domsrv):
+    try:
+        # First try getaddrinfo which handles both IPv4 and IPv6
+        my_logger.info(f"resolve 1, starting resolve for {domsrv} ...")
+        addr_info = socket.getaddrinfo(domsrv, None)
+        my_logger.info(f"resolve 2, addr_info: {addr_info}")
+        # Prefer IPv4 addresses if available
+        ipv4_addrs = [ai[4][0] for ai in addr_info if ai[0] == socket.AF_INET]
+        my_logger.info(f"resolve 3, ipv4_addrs: {ipv4_addrs}")
+        my_logger.info("LOGGING RESOLVE BEFORE IF")
+        if ipv4_addrs:
+            my_logger.info(f"resolve 4, LOGGING RESOLVE IN IF: {ipv4_addrs}")
+            return ipv4_addrs[0]  # Return first IPv4 address
+        return None
+    except socket.gaierror:
+        my_logger.info("resolve 5, LOGGING RESOLVE IN EXCEPT: Unexpected error during domain server resolution")
+        return None
 
 getalltimestamp = 0
 os.environ['ETCDCTL_API'] = '3'
@@ -870,6 +905,21 @@ def volumecreate(data):
   data['chappas']='MezoAdmin'
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['portalport']+' '+data['initiators']+' '+data['chapuser']+' '+data['chappas']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
  elif 'CIFSdom' in data['type']:
+  # Handle domain server resolution if only name is provided
+  my_logger.info("Entering domsrv IF now")
+
+  if len(data['domsrv']) > 2 and int(is_valid_ip(data['domip'])) != 0:
+   my_logger.info(f"LOG 1 s - domsrv detected successfully: {data['domsrv']}")
+   resolved_ip = resolve_domain_server(data['domsrv'])
+   if not resolved_ip:
+    my_logger.info("LOG 2 e - ERROR resolving domsrv to IP")
+    return {'response': 'DNS resolution failed'}
+   data['domip'] = resolved_ip
+   data['domsrv'] = None
+   my_logger.info(f"LOG 3 s - SUCCESS resolving IP: {data['domip']}")
+  else:
+   my_logger.info("LOG 1 e - domsrv detection failed")
+
   cmdline=['/TopStor/encthis.sh',data["domname"],data["dompass"]]
   data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
 
