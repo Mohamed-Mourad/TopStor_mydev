@@ -111,6 +111,10 @@ def config(leader, leaderip, myhost, *bargs):
   dels(leaderip, 'sync', 'dns_')
   put(leaderip, 'sync/dns/HostManualconfigDNS'+'_'+arglist['dnsname']+'_'+arglist['dnssearch']+'/request','dns_'+stampi)
   logmsg.sendlog('HostManual1su13','info',arglist['user'],oldargname, oldargsearch, arglist['dnsname'],arglist['dnssearch'])
+
+  script_path = '/TopStor/addhoststoflask.sh'
+  subprocess.run([script_path, leaderip], check=True)
+
   queuethis('Hostconfig_dns','finish',arglist['user'])
  
 ########### changing gateway  ###############
