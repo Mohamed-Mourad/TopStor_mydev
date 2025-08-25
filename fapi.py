@@ -875,13 +875,14 @@ def volumecreate(data):
   cmdline=['/TopStor/encthis.sh',data["domname"],data["dompass"]]
   data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
 
-  # Call resolve script on the host
-  cmdline = ['/TopStor/resolve_dns.sh', data['domsrv']]
-  result = subprocess.run(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  resolved_ip = result.stdout.decode().strip()
-  if int(is_valid_ip(resolved_ip)) == 0:
-   data['domip'] = resolved_ip
-   data['domsrv'] = ''
+  # Call resolve script if domsrv is passed and domip is not
+  if data['domsrv']:
+    cmdline = ['/TopStor/resolve_dns.sh', leaderip, data['domsrv']]
+    result = subprocess.run(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    resolved_ip = result.stdout.decode().strip()
+    if int(is_valid_ip(resolved_ip)) == 0:
+     data['domip'] = resolved_ip
+     data['domsrv'] = ''
 
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
 
