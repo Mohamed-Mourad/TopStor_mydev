@@ -879,10 +879,18 @@ def volumecreate(data):
   if data['domsrv']:
     cmdline = ['/TopStor/resolve_dns.sh', leaderip, data['domsrv']]
     result = subprocess.run(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    resolved_ip = result.stdout.decode().strip()
-    if int(is_valid_ip(resolved_ip)) == 0:
+    output = result.stdout.decode().strip()
+
+    resolved_ip = ""
+    if output.startswith("RESOLVEDIP="):
+     resolved_ip = output.split("=", 1)[1]
+
+    if resolved_ip and int(is_valid_ip(resolved_ip)) == 0:
      data['domip'] = resolved_ip
      data['domsrv'] = ''
+    else:
+     logmsg.sendlog('CIFS1003', 'error', 'system', f'Failed to resolve host name {data["domsrv"]}')
+     return data
 
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
 
