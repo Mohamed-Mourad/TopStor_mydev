@@ -1090,6 +1090,13 @@ def hostconfig(data):
  print('#############################')
  print(data)
  print('###########################')
+
+ if 'discovered' in data:
+  dleaderip = "10.11.11.250"
+  dleader   = get(dleaderip, 'leader')[0]
+  config(dleader, dleaderip, myhost, data)
+  return data
+
  config(leader, leaderip, myhost, data)
  return data
 
