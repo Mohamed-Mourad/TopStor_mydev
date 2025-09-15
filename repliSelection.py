@@ -27,10 +27,10 @@ def dgsnewpool(data):
   selecteddisks= disks
  else:
   print('selectdisks',disks, allinfo['disks'])
-  bestdisks = selectdisks(disks, allinfo['disks'])
+  bestdisks = selectdisks(leaderip, disks, allinfo['disks'])
  if len(bestdisks) < 1:
     return jsonify(data)
- selecteddisks = bestdisks[0][0].split(',')
+ selecteddisks = bestdisks.split(',')
  diskstring = ''
  for dsk in selecteddisks:
   diskstring += dsk+":"+dsk[-5:]+" "
