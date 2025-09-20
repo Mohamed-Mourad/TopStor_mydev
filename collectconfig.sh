@@ -45,7 +45,7 @@ echo Running snapshots
 zfs list -t snapshot -oname,creation,used
 echo '############################################################################################################################################'
 echo Running important services
-ps -ef | egrep 'zfsping|loop|iscsiswatch'
+ps -ef | egrep 'zfsping|loop|iscsiwatch'
 echo '############################################################################################################################################'
 echo Running system services
 systemctl status --no-pager

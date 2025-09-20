@@ -27,6 +27,7 @@ import logmsg
 from collectNodeConfig import getConfig, downloadConfig
 import zipfile
 from time import sleep
+import socket
 
 getalltimestamp = 0
 os.environ['ETCDCTL_API'] = '3'
@@ -870,10 +871,21 @@ def volumecreate(data):
   data['chappas']='MezoAdmin'
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['portalport']+' '+data['initiators']+' '+data['chapuser']+' '+data['chappas']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
  elif 'CIFSdom' in data['type']:
+
   cmdline=['/TopStor/encthis.sh',data["domname"],data["dompass"]]
   data["dompass"]=subprocess.run(cmdline,stdout=subprocess.PIPE).stdout.decode().split('_result')[1].replace('/','@@sep')
 
+  # Call resolve script if domsrv is passed and domip is not
+  if data['domsrv']:
+    cmdline = ['/TopStor/resolve_dns.sh', leaderip, data['domsrv']]
+    result = subprocess.run(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    resolved_ip = result.stdout.decode().strip()
+    if int(is_valid_ip(resolved_ip)) == 0:
+     data['domip'] = resolved_ip
+     data['domsrv'] = ''
+
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
+
  elif 'NFS' in data['type']:
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+data['rootname']+' '+data['rootid']+' '+data['groupname']+' '+data['groupid']+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']
 
