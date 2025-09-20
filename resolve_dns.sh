@@ -33,13 +33,13 @@ tmpresolv=$(mktemp)
 cp "$tmpresolv" /etc/resolv.conf
 rm -f "$tmpresolv"
 
-resolved_ip=$(getent ahosts "$host_to_resolve" | awk '/^[0-9]+\.[0-9]+\.[0-9]+/{print $1; exit}')
+resolved_ip=$(getent ahosts "$host_to_resolve" 2>/dev/null | awk '/^[0-9]+\.[0-9]+\.[0-9]+/{print $1; exit}')
 
 cp "$orig_resolv" /etc/resolv.conf
 rm -f "$orig_resolv"
 
 if [[ -n "$resolved_ip" ]]; then
-    echo "$resolved_ip"
+    echo "RESOLVED_IP=${resolved_ip}="
     exit 0
 fi
 
