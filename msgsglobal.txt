@@ -335,6 +335,7 @@ Replivol1000:0: : from :: Receiving new snapshot for volume : from partner :
 Replidf1000:0: : from :: Receiving new Snapshot for volume : from partner :
 VolCst01:1: : from ::  Start changing volume : access properties
 VolCsu01:1: : from ::  Success changing volume : access properties
+Volrst01:1: : from ::  Start try to delete volume : 
 NFS1000:1: : from ::  Deleting volume :
 NFS1001:1: : from :: Problem occurred while deleting volume :
 NFS1002:1: : from :: Success deleting :
@@ -343,6 +344,19 @@ NFS1004:1: : from :: Creating volume :
 NFS1005:2: : from :: Volume name : is registered in system. Please check for lost hosts/volumes
 NFS1006:2: : from :: Problem occurred while creating volume :
 NFS1007:2: : from :: Success creating volume :
+contpst01:2: : from :: Looking for : volume service blocking : 
+contpst02:2: : from :: Start Stopping service  : for volume  : 
+contpsu02:2: : from :: Success Stopping service  : for volume  : 
+contpfa02:2: : from :: Failed Stopping service  : for volume  : 
+contpin01:2: : from :: No volume service found for volume : type :
+contpsu01:2: : from :: Success deleting volume : :
+contpwa01:2: : from :: Still failing to  delete volume :  after : retries
+contpfa01:2: : from :: Failed deleting volume volume : after : retries
+contpin02:2: : from :: No service found for volume : type :
+contpst03:2: : from :: Start unmounting and destorying volume : type :
+contper03:2: : from :: Wrong volume entry in the registry database : : 
+contpin03:2: : from :: Detected Deletion task of volume : which is requested by : 
+contpin04:2: : from :: No registery information for volume : for host  :  so abort trying to delete it.
 Evacuaest01:1: : from :: Start Evacuating node :
 Evacuaesu01:1: : from :: Success Evacuating node :
 AddHostst01:2: : from :: Start Adding the new node : to the cluster
