@@ -67,6 +67,7 @@ do
 			exit
 		fi
 		fnupdate $branch 
+		echo hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 		cjobs=(`echo "${cjobs[@]}" | sed "s/$jobinfo//g" `)
   	done
 	lencjobs=`echo $cjobs | wc -c`

@@ -33,6 +33,13 @@ def sendlog(*args):
   sendhost(k[1], str(msg),'recvreply',myhost)
   knowns.append(k[1])
 
+ stamp=datetime.datetime.now().strftime("%s%f")
+ logid=f"{myhost}_{stamp}"
+
+ put(leaderip, f"sync/log/{logid}/request", f"log_{stamp}")
+ put(leaderip, f"sync/log/{logid}/request/{myhost}", f"log_{stamp}")
+ put(leaderip, f"log/{logid}", " ".join(z))
+
 if __name__=='__main__':
  initlog(getlocal('leaderip')[0], getlocal('clusternode')[0])
  sendlog(*sys.argv[1:])
