@@ -70,12 +70,14 @@ stamp=`date +%s`
 /TopStor/getcversion.sh $leaderip $leader $myhost
 cd /TopStor
 commit=`git show --abbrev-commit | grep commit | head -1 | awk '{print $2}'`
-/TopStor/etcdput.py $leaderip cversion/$myhost $version-$commit
+echo /TopStor/etcdput.py $leaderip cversion/$myhost $branch-$commit
+/TopStor/etcdput.py $leaderip cversion/$myhost $branch-$commit
 echo $leader | grep $myhost
 if [ $? -ne 0 ];
 then
-	myhost=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
-	/TopStor/etcdput.py $myhostip cversion/$myhost $version-$commit
+	myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+	echo ip=$myhostip
+	/TopStor/etcdput.py $myhostip cversion/$myhost $branch-$commit
 fi
 /TopStor/myrepopush.sh $branch
 /TopStor/pre_apply.sh	
