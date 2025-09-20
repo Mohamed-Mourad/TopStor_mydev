@@ -39,7 +39,7 @@ cp "$orig_resolv" /etc/resolv.conf
 rm -f "$orig_resolv"
 
 if [[ -n "$resolved_ip" ]]; then
-    echo "RESOLVED_IP=$resolved_ip"
+    echo "RESOLVED_IP=${resolved_ip}="
     exit 0
 fi
 

@@ -883,13 +883,13 @@ def volumecreate(data):
 
     resolved_ip = ""
     if output.startswith("RESOLVEDIP="):
-     resolved_ip = output.split("=", 1)[1]
+     resolved_ip = output.split("=")[1]
 
     if resolved_ip and int(is_valid_ip(resolved_ip)) == 0:
      data['domip'] = resolved_ip
      data['domsrv'] = ''
     else:
-     logmsg.sendlog('CIFS1003', 'error', 'system', f'Failed to resolve host name {data["domsrv"]}')
+     logmsg.sendlog('CIFS1033', 'error', 'system', data['name'],data["domsrv"])
      return data
 
   datastr = data['pool']+' '+data['name']+' '+data['size']+' '+' '+data['ipaddress']+' '+data['Subnet']+' '+data['active']+' '+data['user']+' '+data['owner']+' '+data['user']+' '+ data["domname"]+' '+ data["domsrv"]+' '+ data["domip"]+' '+ data["domadmin"]+' '+ data["dompass"]
