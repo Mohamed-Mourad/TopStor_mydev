@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-
+cd /TopStor/
 # Usage: ./create_bond.sh [bond_name] [bond_ip]
 BOND_NAME="${1:-bond0}"
 
@@ -11,10 +11,11 @@ if nmcli -t -f NAME,TYPE connection show | grep -q "^${BOND_NAME}:bond$"; then
 fi
 
 # Dynamically find NICs starting with enp
-SLAVES=($(ip -o link show | grep -Po '(?<=^\d: )enp[^\:]+' | sort -u))
+SLAVES=($(./listports.sh))
+
 
 if [ ${#SLAVES[@]} -eq 0 ]; then
-    echo "[!] No NICs found starting with 'enp'. Exiting."
+    echo "[!] No NICs found. Exiting."
     exit 1
 fi
 
