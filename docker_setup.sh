@@ -1,4 +1,13 @@
 #!/usr/bin/sh
+
+# if reset -> delete all nmcli conns
+echo "$@" | grep -q "reset"
+if [ $? -eq 0 ]; then
+    nmcli -t -f NAME conn show | grep -Ev '^(docker0|lo|br-)' | while read -r conn; do
+        nmcli conn delete "$conn"
+    done
+fi
+
 BOND_NAME='bond0';
 
 # Check if bond exists, if not create it
