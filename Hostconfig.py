@@ -27,6 +27,23 @@ def config(leader, leaderip, myhost, *bargs):
  with open('/TopStordata/Hostconfig','w') as f:
   f.write(str(arglist)+'\n')
  stampi = str(stamp())
+ ######### managing port bonds ###############
+ if any(key in arglist for key in ['nmports', 'cmports', 'dports']):
+  node_ip = ''
+  if 'ipaddr' in arglist:
+   node_ip = arglist['ipaddr']
+  elif 'name' in arglist:
+   node_ip_raw = get(leaderip, 'ActivePartners/' + arglist['name'])
+  if node_ip_raw and node_ip_raw[0]:
+   node_ip = node_ip_raw[0]
+
+  if node_ip:
+   port_assignments = {
+    k: arglist[k] for k in ['nmports', 'cmports', 'dports'] if k in arglist
+   }
+   manage_port_assignments(leaderip, node_ip, port_assignments)
+  else:
+   print(f"Error: Could not determine IP for node {arglist.get('name')} to manage ports.")
  ######### changing alias ###############
  if 'alias' in arglist:
   queuethis('Hostconfig_alias','running',arglist['user'])
@@ -168,7 +185,55 @@ def config(leader, leaderip, myhost, *bargs):
  return 1
 
 
+def manage_port_assignments(leaderip, node_ip, assignments):
+    print(f"Managing port assignments for node: {node_ip}")
+    queuethis('manage_port_assignments', 'running', assignments)
+    
+    bond_types = ['nmports', 'cmports', 'dports']
+    
+    all_node_bonds_raw = get(leaderip, f'bond/', f'--prefix')
+    
+    # Create a map of which port is in which bond for easy lookup
+    # {'enp0s8': 'bond/nmports/10.11.11.123', 'enp0s9': 'bond/dports/10.11.11.123'}
+    port_to_bond_map = {}
+    for key, val in all_node_bonds_raw:
+        if key.endswith(node_ip):
+            ports = val.split('/')
+            for port in ports:
+                if port:
+                    port_to_bond_map[port] = key
 
+    for bond_type in bond_types:
+        if bond_type not in assignments:
+            continue
+
+        new_bond_key = f"bond/{bond_type}/{node_ip}"
+        new_ports = set(p for p in assignments[bond_type].split(',') if p)
+
+        for port in new_ports:
+            if port in port_to_bond_map and port_to_bond_map[port] != new_bond_key:
+                old_bond_key = port_to_bond_map[port]
+                print(f"Port {port} is being moved from {old_bond_key} to {new_bond_key}")
+                
+                old_ports_raw = get(leaderip, old_bond_key)[0]
+                if old_ports_raw:
+                    old_ports = set(old_ports_raw.split('/'))
+                    old_ports.discard(port) 
+                    
+                    if old_ports:
+                        put(leaderip, old_bond_key, '/'.join(sorted(list(old_ports))))
+                    else:
+                        dels(leaderip, old_bond_key)
+
+        if new_ports:
+            new_value = '/'.join(sorted(list(new_ports)))
+            print(f"Putting key: {new_bond_key} with value: {new_value}")
+            put(leaderip, new_bond_key, new_value)
+        else:
+            print(f"No ports for {new_bond_key}, deleting key.")
+            dels(leaderip, new_bond_key)
+            
+    queuethis('manage_port_assignments', 'finish', assignments)
 
 
 
