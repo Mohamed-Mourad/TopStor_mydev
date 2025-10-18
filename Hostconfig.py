@@ -41,7 +41,7 @@ def config(leader, leaderip, myhost, *bargs):
    port_assignments = {
     k: arglist[k] for k in ['nmports', 'cmports', 'dports'] if k in arglist
    }
-   manage_port_assignments(leaderip, node_ip, port_assignments)
+   manage_port_assignments(leaderip, node_ip, port_assignments, stampi)
   else:
    print(f"Error: Could not determine IP for node {arglist.get('name')} to manage ports.")
  ######### changing alias ###############
@@ -185,7 +185,7 @@ def config(leader, leaderip, myhost, *bargs):
  return 1
 
 
-def manage_port_assignments(leaderip, node_ip, assignments):
+def manage_port_assignments(leaderip, node_ip, assignments, stampi):
     print(f"Managing port assignments for node: {node_ip}")
     queuethis('manage_port_assignments', 'running', assignments)
     
@@ -234,6 +234,7 @@ def manage_port_assignments(leaderip, node_ip, assignments):
             dels(leaderip, new_bond_key)
             
     queuethis('manage_port_assignments', 'finish', assignments)
+    put(leaderip, f'sync/bond/UpdatePortBonds/request', f'bond_{stampi}')
 
 
 
