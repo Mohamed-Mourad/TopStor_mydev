@@ -13,7 +13,7 @@ BOND_NAME='bond0';
 # Check if bond exists, if not create it
 if ! nmcli -t -f NAME,TYPE connection show | grep -q "^${BOND_NAME}:bond$"; then
     echo "[*] Bond '$BOND_NAME' not found. Creating..."
-    /TopStor/create_bond.sh
+    /TopStor/create_bond.sh $BOND_NAME
 fi
 
 modprobe bnx2

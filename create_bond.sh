@@ -6,50 +6,50 @@ cd /TopStor/
 # Example: ./create_bond.sh nm_bond "enp0s3,enp0s8"
 # Example: ./create_bond.sh bond0
 
-BOND_NAME="$1"
+BOND_NAME="${1:-bond0}"
 PORTS_STR="$2"
 
 if [ -z "$BOND_NAME" ]; then
-    echo "[!] No bond name provided. Exiting."
-    exit 1
+    echo "[!] No bond name provided. Exiting."
+    exit 1
 fi
 
 # --- 1. Determine Target Slaves ---
 declare -a DESIRED_SLAVES
 if [ -n "$PORTS_STR" ]; then
     echo "[*] Using specified slaves: $PORTS_STR"
-    IFS=',' read -r -a DESIRED_SLAVES <<< "$PORTS_STR"
+    IFS=',' read -r -a DESIRED_SLAVES <<< "$PORTS_STR"
 else
     echo "[*] No slaves specified. Using default: all ports from listports.sh"
     DESIRED_SLAVES=($(/TopStor/listports.sh))
 fi
 
 if [ ${#DESIRED_SLAVES[@]} -eq 0 ]; then
-    echo "[!] No slave ports provided or found for $BOND_NAME. Exiting."
-    exit 1
+    echo "[!] No slave ports provided or found for $BOND_NAME. Exiting."
+    exit 1
 fi
 
 echo "[*] Reconciling bond '$BOND_NAME' with desired slaves: ${DESIRED_SLAVES[*]}"
 
 # --- 2. Create bond if it doesn't exist ---
 if ! nmcli -t -f NAME,TYPE connection show | grep -q "^${BOND_NAME}:bond$"; then
-    echo "[+] Bond '$BOND_NAME' not found. Creating..."
-    nmcli connection add type bond con-name "$BOND_NAME" ifname "$BOND_NAME" mode active-backup
-    nmcli connection modify "$BOND_NAME" bond.options "mode=active-backup,miimon=100,fail_over_mac=1"
-    nmcli connection modify "$BOND_NAME" ipv4.method disabled
-    nmcli connection modify "$BOND_NAME" ipv6.method ignore
+    echo "[+] Bond $BOND_NAME not found. Creating..."
+    nmcli connection add type bond con-name "$BOND_NAME" ifname "$BOND_NAME" mode active-backup || true
+    nmcli connection modify "$BOND_NAME" bond.options "mode=active-backup,miimon=100,fail_over_mac=1"
+    nmcli connection modify "$BOND_NAME" ipv4.method disabled
+    nmcli connection modify "$BOND_NAME" ipv6.method ignore
 else
-    echo "[*] Bond '$BOND_NAME' already exists."
+    echo "[*] Bond '$BOND_NAME' already exists."
 fi
 
 # --- 3. Get CURRENT slaves ---
 # Use an associative array to map: [device_name]="connection_name"
 declare -A CURRENT_SLAVES_MAP
-while IFS=: read -r conn_name iface; do
-    if [ -n "$iface" ] && [ "$iface" != "--" ]; then
+while IFS=: read -r conn_name iface master; do
+    if [[ "$master" == "$BOND_NAME" ]]; then
         CURRENT_SLAVES_MAP["$iface"]="$conn_name"
     fi
-done < <(nmcli -t -f NAME,DEVICE,MASTER connection show | grep ":${BOND_NAME}$" | cut -d: -f1,2)
+done < <(nmcli -t -f NAME,DEVICE,MASTER conn show | grep ":${BOND_NAME}$" | cut -d: -f1,2)
 echo "[*] Current slaves: ${!CURRENT_SLAVES_MAP[*]}"
 
 # Create a map for desired slaves for easy lookup
@@ -80,7 +80,7 @@ for nic in "${!DESIRED_SLAVES_MAP[@]}"; do
             echo "[!] Warning: $nic is configured. Deleting old connection '$existing_conn'."
             nmcli connection delete "$existing_conn" || true
         fi
-        
+        
         # Add the new slave connection
         nmcli connection add type ethernet con-name "slave-$nic-to-$BOND_NAME" ifname "$nic" master "$BOND_NAME"
     fi
