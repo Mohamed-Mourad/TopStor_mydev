@@ -224,6 +224,14 @@ else
 	myclusterip=`echo $mycluster | awk -F'/' '{print $1}'`
 	mynodeip=`echo $mynode | awk -F'/' '{print $1}'`
 
+	# Wait for node to be up
+	ping -w 3 $mynodeip
+	while [ $? -ne 0 ];
+	do
+	    sleep 1
+	    ping -w 3 $mynodeip
+	done
+
         # --- START RECONCILATION LOGIC ---
         echo "[*] Configured node. Reconciling bond assignments from etcd..."
 
@@ -236,34 +244,73 @@ else
             return 1
         }
 
+	# Helper function to remove a NIC from ALL bonds
+	remove_nic_from_all_bonds() {
+	    local nic="$1"
+	    echo "[*] Removing $nic from all bonds..."
+	    
+	    # Find all slave connections for this NIC
+	    local slave_conns=$(nmcli -t -f NAME,DEVICE connection show | grep ":${nic}$" | cut -d':' -f1)
+	    
+	    for conn in $slave_conns; do
+	        echo "[-] Deleting connection: $conn"
+	        nmcli connection delete "$conn" 2>/dev/null || true
+	    done
+	}
+
         # 1. Get ALL available ports from hardware
         ALL_PORTS_ARR=($(/TopStor/listports.sh))
         echo "[*] All available ports on host: ${ALL_PORTS_ARR[*]}"
 
         # 2. Get desired config from etcd
         # We use $myclusterip as the etcd host
-        NMPORTS_STR=$(/pace/etcdget.py $myclusterip config/$myhost/nmports)
-        CMPORTS_STR=$(/pace/etcdget.py $myclusterip config/$myhost/cmports)
-        DPORTS_STR=$(/pace/etcdget.py $myclusterip config/$myhost/dports)
-    
+	echo "clusterip, hostname, nodeip:"
+	echo "    $CURRENT_CLUSTER_IP $myhost $mynodeip"
+        NMPORTS_STR=$(/pace/etcdget.py $myclusterip bond/$myhost/nmports/$mynodeip)
+        CMPORTS_STR=$(/pace/etcdget.py $myclusterip bond/$myhost/cmports/$mynodeip)
+        DPORTS_STR=$(/pace/etcdget.py $myclusterip bond/$myhost/dports/$mynodeip)
+
+        if [[ "$NMPORTS_STR" == "unreachable"* ]]; then
+            echo "[!] Failed to get nmports config from etcd. Assuming empty."
+            NMPORTS_STR=""
+        fi
+        if [[ "$CMPORTS_STR" == "unreachable"* ]]; then
+            echo "[!] Failed to get cmports config from etcd. Assuming empty."
+            CMPORTS_STR=""
+        fi
+        if [[ "$DPORTS_STR" == "unreachable"* ]]; then
+            echo "[!] Failed to get dports config from etcd. Assuming empty."
+            DPORTS_STR=""
+        fi
+ 
         echo "[*] Desired config from etcd:"
         echo "    nmports: $NMPORTS_STR"
         echo "    cmports: $CMPORTS_STR"
         echo "    dports: $DPORTS_STR"
 
-        # 3. Check for "All Empty" rule
+	# 3. CRITICAL: Remove ALL NICs from ALL bonds first to ensure clean state
+	echo "[!] Cleaning up all existing bond slave assignments..."
+	for port in "${ALL_PORTS_ARR[@]}"; do
+	    remove_nic_from_all_bonds "$port"
+	done
+
+        # 4. Check for "All Empty" rule
         if [ -z "$NMPORTS_STR" ] && [ -z "$CMPORTS_STR" ] && [ -z "$DPORTS_STR" ]; then
             echo "[*] All bond configs are empty. Using default bond0 for all."
-            # Use 'create_bond.sh' to ensure bond0 has ALL ports
-            ALL_PORTS_STR=$(echo "${ALL_PORTS_ARR[*]}" | tr ' ' ',')
-            /TopStor/create_bond.sh bond0 "$ALL_PORTS_STR"
           
             mynodedev='bond0'
             myclusterdev='bond0'
             data1dev='bond0'
             data2dev='bond0'
         else
-            echo "[*] Custom bond config found. Applying..."
+	    echo "[!] Custom config found. Taking down network connections..."
+	    nmcli conn down mynode 2>/dev/null || true
+	    nmcli conn down mycluster 2>/dev/null || true
+	    nmcli conn down bond0 2>/dev/null || true
+	    nmcli conn down nm_bond 2>/dev/null || true
+	    nmcli conn down cm_bond 2>/dev/null || true
+	    nmcli conn down d_bond 2>/dev/null || true
+	    echo "[*] Custom bond config found. Applying..."
          
             NM_BOND="nm_bond"
             CM_BOND="cm_bond"

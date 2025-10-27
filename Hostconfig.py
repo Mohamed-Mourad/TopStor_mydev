@@ -41,7 +41,7 @@ def config(leader, leaderip, myhost, *bargs):
    port_assignments = {
     k: arglist[k] for k in ['nmports', 'cmports', 'dports'] if k in arglist
    }
-   manage_port_assignments(leaderip, node_ip, port_assignments, stampi)
+   manage_port_assignments(leaderip, node_ip, port_assignments, stampi, myhost)
   else:
    print(f"Error: Could not determine IP for node {arglist.get('name')} to manage ports.")
  ######### changing alias ###############
@@ -185,16 +185,17 @@ def config(leader, leaderip, myhost, *bargs):
  return 1
 
 
-def manage_port_assignments(leaderip, node_ip, assignments, stampi):
+def manage_port_assignments(leaderip, node_ip, assignments, stampi, myhost):
     print(f"Managing port assignments for node: {node_ip}")
     queuethis('manage_port_assignments', 'running', assignments)
     
     bond_types = ['nmports', 'cmports', 'dports']
+
+    # Read all existing bonds for this host
+    all_node_bonds_raw = get(leaderip, f'bond/{myhost}/', f'--prefix')
     
-    all_node_bonds_raw = get(leaderip, f'bond/', f'--prefix')
-    
-    # Create a map of which port is in which bond for easy lookup
-    # {'enp0s8': 'bond/nmports/10.11.11.123', 'enp0s9': 'bond/dports/10.11.11.123'}
+    # Map each port to its bond key for easy lookup
+    # Example: {'enp0s8': 'bond/myhost/nmports/10.11.11.123'}
     port_to_bond_map = {}
     for key, val in all_node_bonds_raw:
         if key.endswith(node_ip):
@@ -207,7 +208,7 @@ def manage_port_assignments(leaderip, node_ip, assignments, stampi):
         if bond_type not in assignments:
             continue
 
-        new_bond_key = f"bond/{bond_type}/{node_ip}"
+        new_bond_key = f"bond/{myhost}/{bond_type}/{node_ip}"
         new_ports = set(p for p in assignments[bond_type].split(',') if p)
 
         for port in new_ports:
@@ -218,7 +219,7 @@ def manage_port_assignments(leaderip, node_ip, assignments, stampi):
                 old_ports_raw = get(leaderip, old_bond_key)[0]
                 if old_ports_raw:
                     old_ports = set(old_ports_raw.split('/'))
-                    old_ports.discard(port) 
+                    old_ports.discard(port)
                     
                     if old_ports:
                         put(leaderip, old_bond_key, '/'.join(sorted(list(old_ports))))
@@ -232,10 +233,9 @@ def manage_port_assignments(leaderip, node_ip, assignments, stampi):
         else:
             print(f"No ports for {new_bond_key}, deleting key.")
             dels(leaderip, new_bond_key)
-            
+
     queuethis('manage_port_assignments', 'finish', assignments)
     put(leaderip, f'sync/bond/UpdatePortBonds/request', f'bond_{stampi}')
-
 
 
 if __name__=='__main__':
