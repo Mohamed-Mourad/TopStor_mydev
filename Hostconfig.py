@@ -34,8 +34,8 @@ def config(leader, leaderip, myhost, *bargs):
    node_ip = arglist['ipaddr']
   elif 'name' in arglist:
    node_ip_raw = get(leaderip, 'ActivePartners/' + arglist['name'])
-  if node_ip_raw and node_ip_raw[0]:
-   node_ip = node_ip_raw[0]
+   if node_ip_raw and node_ip_raw[0]:
+    node_ip = node_ip_raw[0]
 
   if node_ip:
    port_assignments = {
