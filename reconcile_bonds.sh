@@ -2,7 +2,6 @@
 exec 3>&1
 exec 1>&2
 
-#
 # /TopStor/reconcile_bonds.sh
 #
 # Description:
@@ -12,7 +11,6 @@ exec 1>&2
 # Output (to STDOUT):
 #   A single space-separated string:
 #   "<mynodedev> <myclusterdev> <data1dev> <data2dev>"
-#
 
 # --- START RECONCILIATION LOGIC ---
 echo "[*] Configured node. Reconciling bond assignments from etcd..." >&2
@@ -51,7 +49,7 @@ echo "    nmports: $NMPORTS_STR" >&2
 echo "    cmports: $CMPORTS_STR" >&2
 echo "    dports: $DPORTS_STR" >&2
 
-# 4. Check for "All Empty" rule
+# 3. Check for "All Empty" rule
 if [ -z "$NMPORTS_STR" ] && [ -z "$CMPORTS_STR" ] && [ -z "$DPORTS_STR" ]; then
     echo "[*] All bond configs are empty. Using default bond0 for all." >&2
     /TopStor/create_bond.sh bond0
