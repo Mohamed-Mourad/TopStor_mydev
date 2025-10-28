@@ -213,6 +213,7 @@ else
 	if [ $ipaddrn -ge 5 ];
 	then
 		mynode=$ipaddr
+		nmcli conn mod mynode connection.interface-name $mynodedev
 		nmcli conn mod mynode ipv4.addresses $ipaddr
 		nmcli conn up mynode 
 	
@@ -225,6 +226,7 @@ else
 	if [ $caddrn -ge 5 ];
 	then
 		mycluster=$caddr
+		nmcli conn mod mycluster connection.interface-name $myclusterdev
 		nmcli conn mod mycluster ipv4.addresses $caddr
 	else
 		mycluster=`nmcli conn show mycluster | grep ipv4.addresses | awk '{print $2}'`
