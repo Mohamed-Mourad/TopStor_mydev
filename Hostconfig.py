@@ -234,6 +234,30 @@ def manage_port_assignments(leaderip, node_ip, assignments, stampi, myhost):
             print(f"No ports for {new_bond_key}, deleting key.")
             dels(leaderip, new_bond_key)
 
+    print(f"Writing local bond config to /TopStordata/bondconfig for node {node_ip}")
+    try:
+        # Get the final, complete config for this node from etcd
+        nmports_val = get(leaderip, f"bond/{myhost}/nmports/{node_ip}")[0] or ""
+        cmports_val = get(leaderip, f"bond/{myhost}/cmports/{node_ip}")[0] or ""
+        dports_val = get(leaderip, f"bond/{myhost}/dports/{node_ip}")[0] or ""
+
+        # Use the exact variable names the shell script expects
+        config_content = f"""
+NMPORTS_STR="{nmports_val}"
+CMPORTS_STR="{cmports_val}"
+DPORTS_STR="{dports_val}"
+""".strip()
+
+        with open('/TopStordata/bondconfig', 'w') as f:
+            f.write(config_content + '\n')
+        
+        print(f"Successfully wrote bond config file.")
+        
+    except Exception as e:
+        print(f"CRITICAL: Failed to write /TopStordata/bondconfig: {e}")
+        # Log this error, but don't fail the operation
+        pass
+
     queuethis('manage_port_assignments', 'finish', assignments)
     put(leaderip, f'sync/bond/UpdatePortBonds/request', f'bond_{stampi}')
 
