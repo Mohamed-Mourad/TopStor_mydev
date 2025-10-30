@@ -45,10 +45,11 @@ create_bond_if_valid() {
         /TopStor/create_bond.sh "$bond_name" "$ports_str"
         IFS='/' read -r -a ports <<< "$ports_str"
         for p in "${ports[@]}"; do ASSIGNED_PORTS_ARR+=("$p"); done
-        echo "$bond_name"
+        #echo "$bond_name"
+	return 0
     else
         echo "[!] $bond_name skipped: no valid NICs found." >&2
-        echo ""
+        return 1
     fi
 }
 
@@ -108,13 +109,15 @@ mynodedev=""
 myclusterdev=""
 data1dev=""
 
-mynodedev=$(create_bond_if_valid "$NM_BOND" "$NM_VALID")
+if create_bond_if_valid "$NM_BOND" "$NM_VALID"; then
+    mynodedev=$NM_BOND
+fi
 
 if [ -n "$CM_VALID" ] && [ "$CM_VALID" == "$NM_VALID" ] && [ -n "$mynodedev" ]; then
     echo "[*] cmports identical to nmports. Re-using $mynodedev." >&2
     myclusterdev=$mynodedev
-else
-    myclusterdev=$(create_bond_if_valid "$CM_BOND" "$CM_VALID")
+elif create_bond_if_valid "$CM_BOND" "$CM_VALID"; then
+    myclusterdev=$CM_BOND
 fi
 
 if [ -n "$D_VALID" ] && [ "$D_VALID" == "$NM_VALID" ] && [ -n "$mynodedev" ]; then
@@ -123,8 +126,8 @@ if [ -n "$D_VALID" ] && [ "$D_VALID" == "$NM_VALID" ] && [ -n "$mynodedev" ]; th
 elif [ -n "$D_VALID" ] && [ "$D_VALID" == "$CM_VALID" ] && [ -n "$myclusterdev" ]; then
     echo "[*] dports identical to cmports. Re-using $myclusterdev." >&2
     data1dev=$myclusterdev
-else
-    data1dev=$(create_bond_if_valid "$D_BOND" "$D_VALID")
+elif create_bond_if_valid "$D_BOND" "$D_VALID"; then
+    data1dev=$D_BOND
 fi
 
 data2dev=$data1dev
