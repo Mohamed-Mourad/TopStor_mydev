@@ -1,47 +1,75 @@
 #!/bin/bash
 exec 3>&1
 exec 1>&2
+set -e
 
 # /TopStor/reconcile_bonds.sh
-#
 # Description:
-#   Reconciles bond interface assignments based on config in etcd.
-#   This script is intended to be called by docker_setup.sh.
+#   Reconciles bond interface assignments based on config in /TopStordata/bondconfig.
+#   Hardware-aware: gracefully degrades if local NICs don't match cluster config.
 #
-# Output (to STDOUT):
-#   A single space-separated string:
-#   "<mynodedev> <myclusterdev> <data1dev> <data2dev>"
+# STDOUT: "<mynodedev> <myclusterdev> <data1dev> <data2dev>"
 
-# --- START RECONCILIATION LOGIC ---
-echo "[*] Configured node. Reconciling bond assignments from etcd..." >&2
+echo "[*] Reconciling bond assignments..." >&2
 
-# Helper function to check if item is in array
-# usage: containsElement "item" "${array[@]}"
-containsElement () {
-    local e match="$1"
-    shift
+# --- Helpers ---
+
+containsElement() {
+    local match="$1"; shift
     for e; do [[ "$e" == "$match" ]] && return 0; done
     return 1
 }
 
+filter_local_ports() {
+    local desired="$1"; shift
+    local -a all=("$@") valid=()
+    declare -A avail
+    for p in "${all[@]}"; do avail["$p"]=1; done
 
-# 1. Get ALL available ports from hardware
+    IFS='/' read -r -a desired_arr <<< "$desired"
+    for p in "${desired_arr[@]}"; do
+        if [[ -n "${avail[$p]}" ]]; then
+            valid+=("$p")
+        else
+            echo "[!] Port '$p' not found on this node, ignoring." >&2
+        fi
+    done
+
+    (IFS='/'; echo "${valid[*]}")
+}
+
+create_bond_if_valid() {
+    local bond_name="$1" ports_str="$2"
+    if [ -n "$ports_str" ]; then
+        echo "[+] Creating $bond_name with: $ports_str" >&2
+        /TopStor/create_bond.sh "$bond_name" "$ports_str"
+        IFS='/' read -r -a ports <<< "$ports_str"
+        for p in "${ports[@]}"; do ASSIGNED_PORTS_ARR+=("$p"); done
+        echo "$bond_name"
+    else
+        echo "[!] $bond_name skipped: no valid NICs found." >&2
+        echo ""
+    fi
+}
+
+# --- 1. Gather hardware ---
 ALL_PORTS_ARR=($(/TopStor/listports.sh))
-echo "[*] All available ports on host: ${ALL_PORTS_ARR[*]}" >&2
+if [ ${#ALL_PORTS_ARR[@]} -eq 0 ]; then
+    echo "[!!!] No physical NICs detected. Network setup aborted." >&2
+    echo "bond0 bond0 bond0 bond0" >&3
+    exit 0
+fi
+echo "[*] Available NICs: ${ALL_PORTS_ARR[*]}" >&2
 
-# 2. Get desired config from local file
+# --- 2. Load config ---
 CONFIG_FILE="/TopStordata/bondconfig"
-
-# Initialize defaults
-NMPORTS_STR=""
-CMPORTS_STR=""
-DPORTS_STR=""
+NMPORTS_STR=""; CMPORTS_STR=""; DPORTS_STR=""
 
 if [ -f "$CONFIG_FILE" ]; then
     echo "[*] Loading bond config from $CONFIG_FILE" >&2
     source "$CONFIG_FILE"
 else
-    echo "[!] Bond config file not found: $CONFIG_FILE. Assuming empty config." >&2
+    echo "[!] No config file found, assuming empty config." >&2
 fi
 
 echo "[*] Desired config:" >&2
@@ -49,132 +77,113 @@ echo "    nmports: $NMPORTS_STR" >&2
 echo "    cmports: $CMPORTS_STR" >&2
 echo "    dports: $DPORTS_STR" >&2
 
-# 3. Check for "All Empty" rule
+# --- 3. Handle all-empty ---
 if [ -z "$NMPORTS_STR" ] && [ -z "$CMPORTS_STR" ] && [ -z "$DPORTS_STR" ]; then
-    echo "[*] All bond configs are empty. Using default bond0 for all." >&2
-    /TopStor/create_bond.sh bond0
-    
-    mynodedev='bond0'
-    myclusterdev='bond0'
-    data1dev='bond0'
-    data2dev='bond0'
+    echo "[*] Empty config detected — using bond0 for all roles." >&2
+    ALL_PORTS_STR=$(echo "${ALL_PORTS_ARR[*]}" | tr ' ' '/')
+    /TopStor/create_bond.sh bond0 "$ALL_PORTS_STR"
+    echo "bond0 bond0 bond0 bond0" >&3
+    exit 0
+fi
+
+# --- 4. Apply custom config ---
+echo "[!] Custom config detected, bringing down existing connections..." >&2
+nmcli -t -f NAME conn show | grep -Ev '^(docker0|lo|br-)' | while read -r conn; do
+    nmcli conn down "$conn" 2>/dev/null || true
+done
+
+NM_BOND="nm_bond"
+CM_BOND="cm_bond"
+D_BOND="d_bond"
+DEFAULT_BOND="bond0"
+ASSIGNED_PORTS_ARR=()
+
+# Filter ports against local hardware
+NM_VALID=$(filter_local_ports "$NMPORTS_STR" "${ALL_PORTS_ARR[@]}")
+CM_VALID=$(filter_local_ports "$CMPORTS_STR" "${ALL_PORTS_ARR[@]}")
+D_VALID=$(filter_local_ports "$DPORTS_STR" "${ALL_PORTS_ARR[@]}")
+
+# --- 5. Create bonds (with identical check) ---
+mynodedev=""
+myclusterdev=""
+data1dev=""
+
+mynodedev=$(create_bond_if_valid "$NM_BOND" "$NM_VALID")
+
+if [ -n "$CM_VALID" ] && [ "$CM_VALID" == "$NM_VALID" ] && [ -n "$mynodedev" ]; then
+    echo "[*] cmports identical to nmports. Re-using $mynodedev." >&2
+    myclusterdev=$mynodedev
 else
-    echo "[!] Custom config found. Taking down network connections..." >&2
-    nmcli -t -f NAME conn show | grep -Ev '^(docker0|lo|br-)' | while read -r conn; do
-        nmcli conn down "$conn"
-    done
+    myclusterdev=$(create_bond_if_valid "$CM_BOND" "$CM_VALID")
+fi
 
-    echo "[*] Custom bond config found. Applying..." >&2
- 
-    NM_BOND="nm_bond"
-    CM_BOND="cm_bond"
-    D_BOND="d_bond"
-    DEFAULT_BOND="bond0"
+if [ -n "$D_VALID" ] && [ "$D_VALID" == "$NM_VALID" ] && [ -n "$mynodedev" ]; then
+    echo "[*] dports identical to nmports. Re-using $mynodedev." >&2
+    data1dev=$mynodedev
+elif [ -n "$D_VALID" ] && [ "$D_VALID" == "$CM_VALID" ] && [ -n "$myclusterdev" ]; then
+    echo "[*] dports identical to cmports. Re-using $myclusterdev." >&2
+    data1dev=$myclusterdev
+else
+    data1dev=$(create_bond_if_valid "$D_BOND" "$D_VALID")
+fi
 
-    # Track all ports that get assigned to a *custom* bond
-    ASSIGNED_PORTS_ARR=()
+data2dev=$data1dev
 
-    # --- Process nmports ---
-    if [ -n "$NMPORTS_STR" ]; then
-        echo "[+] Configuring $NM_BOND with: $NMPORTS_STR" >&2
-        /TopStor/create_bond.sh "$NM_BOND" "$NMPORTS_STR"
-        mynodedev=$NM_BOND
-        # Add to assigned list
-        IFS='/' read -r -a ports <<< "$NMPORTS_STR"
-        for port in "${ports[@]}"; do ASSIGNED_PORTS_ARR+=("$port"); done
-    else
-        mynodedev=$DEFAULT_BOND # Will use bond0 by default
+# --- 6. Create default bond if free NICs remain ---
+REMAINING_PORTS=()
+for p in "${ALL_PORTS_ARR[@]}"; do
+    if ! containsElement "$p" "${ASSIGNED_PORTS_ARR[@]}"; then
+        REMAINING_PORTS+=("$p")
     fi
+done
 
-    # --- Process cmports ---
-    if [ -n "$CMPORTS_STR" ]; then
-        if [ "$CMPORTS_STR" == "$NMPORTS_STR" ]; then
-            echo "[*] cmports is same as nmports. Re-using $NM_BOND." >&2
-            myclusterdev=$NM_BOND
-        else
-            echo "[+] Configuring $CM_BOND with: $CMPORTS_STR" >&2
-            /TopStor/create_bond.sh "$CM_BOND" "$CMPORTS_STR"
-            myclusterdev=$CM_BOND
-            IFS='/' read -r -a ports <<< "$CMPORTS_STR"
-            for port in "${ports[@]}"; do ASSIGNED_PORTS_ARR+=("$port"); done
-        fi
-    else
-        myclusterdev=$DEFAULT_BOND # Will use bond0 by default
-    fi
+DEFAULT_BOND_CREATED=false
+if [ ${#REMAINING_PORTS[@]} -gt 0 ]; then
+    REMAINING_PORTS_STR=$(echo "${REMAINING_PORTS[*]}" | tr ' ' '/')
+    echo "[+] Configuring $DEFAULT_BOND with remaining ports: $REMAINING_PORTS_STR" >&2
+    /TopStor/create_bond.sh "$DEFAULT_BOND" "$REMAINING_PORTS_STR"
+    DEFAULT_BOND_CREATED=true
+else
+    echo "[*] No remaining NICs for $DEFAULT_BOND." >&2
+fi
 
-    # --- Process dports ---
-    if [ -n "$DPORTS_STR" ]; then
-        if [ "$DPORTS_STR" == "$NMPORTS_STR" ]; then
-            echo "[*] dports is same as nmports. Re-using $NM_BOND." >&2
-            data1dev=$NM_BOND
-            data2dev=$NM_BOND
-        elif [ "$DPORTS_STR" == "$CMPORTS_STR" ]; then
-            echo "[*] dports is same as cmports. Re-using $CM_BOND." >&2
-            data1dev=$CM_BOND
-            data2dev=$CM_BOND
-        else
-            echo "[+] Configuring $D_BOND with: $DPORTS_STR" >&2
-            /TopStor/create_bond.sh "$D_BOND" "$DPORTS_STR"
-            data1dev=$D_BOND
-            data2dev=$D_BOND
-            IFS='/' read -r -a ports <<< "$DPORTS_STR"
-            for port in "${ports[@]}"; do ASSIGNED_PORTS_ARR+=("$port"); done
-        fi
-    else
-        data1dev=$DEFAULT_BOND # Will use bond0 by default
-        data2dev=$DEFAULT_BOND
-    fi
+# --- 7. Fallback assignments (Prioritized) ---
+echo "[*] Assigning fallbacks for unconfigured/failed bonds..." >&2
+FALLBACK_BOND=""
 
-    # --- Process Remaining Ports ---
-    REMAINING_PORTS_ARR=()
-    for port in "${ALL_PORTS_ARR[@]}"; do
-        if ! containsElement "$port" "${ASSIGNED_PORTS_ARR[@]}"; then
-            REMAINING_PORTS_ARR+=("$port")
-        fi
-    done
-
-    if [ ${#REMAINING_PORTS_ARR[@]} -eq 0 ]; then
-        # SUB-RULE: No remaining ports.
-        echo "[!] No remaining ports found." >&2
-        # Find a fallback bond for any unassigned categories
-        FALLBACK_BOND=""
-        if [ -n "$NMPORTS_STR" ]; then FALLBACK_BOND=$NM_BOND;
-        elif [ -n "$CMPORTS_STR" ]; then FALLBACK_BOND=$CM_BOND;
-        elif [ -n "$DPORTS_STR" ]; then FALLBACK_BOND=$D_BOND;
-        fi
-    
-        # Handle edge case where all ports are assigned but one of the configs was empty
-        if [ -z "$FALLBACK_BOND" ]; then
-             echo "[!] No fallback bond found, defaulting to nm_bond" >&2
-             FALLBACK_BOND=$NM_BOND
-        fi
-
-        echo "[!] Using $FALLBACK_BOND as fallback for empty assignments." >&2
-    
-        if [ -z "$NMPORTS_STR" ]; then mynodedev=$FALLBACK_BOND; fi
-        if [ -z "$CMPORTS_STR" ]; then myclusterdev=$FALLBACK_BOND; fi
-        if [ -z "$DPORTS_STR" ]; then data1dev=$FALLBACK_BOND; data2dev=$FALLBACK_BOND; fi
-    
-        # Delete the default bond0 if it exists, it's not needed
-        if nmcli -t -f NAME,TYPE connection show | grep -q "^${DEFAULT_BOND}:bond$"; then
-            echo "[-] Deleting unused default $DEFAULT_BOND." >&2
-            nmcli connection delete "$DEFAULT_BOND" 2>/dev/null || true
-        fi
-    else
-        # SUB-RULE: Remaining ports exist.
-        REMAINING_PORTS_STR=$(echo "${REMAINING_PORTS_ARR[*]}" | tr ' ' ',')
-        echo "[+] Configuring $DEFAULT_BOND with all remaining ports: $REMAINING_PORTS_STR" >&2
-        /TopStor/create_bond.sh "$DEFAULT_BOND" "$REMAINING_PORTS_STR"
-        # Any var still set to DEFAULT_BOND ('bond0') is now correctly configured.
+# Find the "best" bond to use as a fallback.
+if [ -n "$mynodedev" ]; then FALLBACK_BOND=$mynodedev;
+elif [ -n "$myclusterdev" ]; then FALLBACK_BOND=$myclusterdev;
+elif [ -n "$data1dev" ]; then FALLBACK_BOND=$data1dev;
+elif [ "$DEFAULT_BOND_CREATED" = true ]; then FALLBACK_BOND=$DEFAULT_BOND;
+else
+    # Last resort: find *any* bond that exists on the system
+    FALLBACK_BOND=$(nmcli -t -f NAME,TYPE connection show | grep ':bond$' | cut -d':' -f1 | head -n 1)
+    if [ -z "$FALLBACK_BOND" ]; then
+        echo "[!!!] CRITICAL: No bonds could be created or found. Defaulting to '$DEFAULT_BOND'." >&2
+        FALLBACK_BOND="$DEFAULT_BOND" # Use the name even if creation failed
     fi
 fi
 
-echo "[✓] Network reconciliation complete." >&2
-echo "    Node device:    $mynodedev" >&2
-echo "    Cluster device: $myclusterdev" >&2
-echo "    Data device:    $data1dev" >&2
+echo "[*] Using '$FALLBACK_BOND' as the primary fallback device." >&2
 
-# --- FINAL OUTPUT ---
-# This is the *only* line that should print to STDOUT.
-# It returns the determined values to the calling script.
+mynodedev=${mynodedev:-$FALLBACK_BOND}
+myclusterdev=${myclusterdev:-$FALLBACK_BOND}
+data1dev=${data1dev:-$FALLBACK_BOND}
+data2dev=${data2dev:-$data1dev} # data2dev always mirrors data1
+
+# --- 8. Cleanup ---
+if ! $DEFAULT_BOND_CREATED && [ "$FALLBACK_BOND" != "$DEFAULT_BOND" ] && \
+   nmcli -t -f NAME,TYPE connection show | grep -q "^${DEFAULT_BOND}:bond$"; then
+    echo "[-] Deleting unused default bond0." >&2
+    nmcli connection delete "$DEFAULT_BOND" 2>/dev/null || true
+fi
+
+# --- Done ---
+echo "[✓] Network reconciliation complete." >&2
+echo "    Node:    $mynodedev" >&2
+echo "    Cluster: $myclusterdev" >&2
+echo "    Data:    $data1dev" >&2
+
+# Output final mapping
 echo "$mynodedev $myclusterdev $data1dev $data2dev" >&3
