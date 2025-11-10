@@ -227,6 +227,7 @@ def getall(leadip, alldsks='0'):
  print('snapperiods',snapperiodsdict) 
  '''
  #print('disks',disksdict)
+ print('pools',poolsdict)
  return {'hosts':hostsdict, 'pools':poolsdict, 'raids':raidsdict, 'disks':disksdict, 'volumes':volumesdict, 'snapshots':snapshotsdict, 'snapperiods':snapperiodsdict}
 
 def initallphy(ipadd):

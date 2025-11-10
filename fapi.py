@@ -108,7 +108,15 @@ def login_required(f):
  def decorated_function(*args, **kwargs):
   global loggedusers
   data = request.args.to_dict()
+  if 'disks[]' in data:
+   data['disks'] = request.args.getlist('disks[]')
+   del data['disks[]']
+  if 'cache[]' in data:
+   data['cache'] = request.args.getlist('cache[]')
+   del data['cache[]']
+
   for dat in data:
+   if isinstance(data[dat], str):
     data[dat] = data[dat].replace(' ','')
   data['response'] = 'baduser'
   if data['token'] in loggedusers:
@@ -452,28 +460,39 @@ def dgsnewpool(data):
  if 'baduser' in data['response']:
   return {'response': 'baduser'}
  getalltime('yes')
- keys = []
- dgsinfo = {'raids':allinfo['raids'], 'pools':allinfo['pools'], 'disks':allinfo['disks']}
- dgsinfo['newraid'] = newraids(allinfo['disks'])
- if data['useable'] not in dgsinfo['newraid'][data['redundancy']]:
-  keys = list(dgsinfo['newraid'][data['redundancy']].keys())
-  keys.append(float(data['useable']))
-  keys.sort()
-  diskindx = keys.index(float(data['useable'])) + 1
-  if diskindx == len(keys):
-   diskindx = len(keys) - 2 
-  data['useable'] = keys[diskindx]
- disks =  dgsinfo['newraid'][data['redundancy']][data['useable']]
- if 'single' in data['redundancy']:
-  selecteddisks= disks
+ if data['disks']:
+  selecteddisks = data['disks']
  else:
-  bestdisks = selectdisks(leaderip, disks, allinfo['disks'])
-  if len(bestdisks) < 1:
-    return jsonify(data)
-  selecteddisks = bestdisks.split(',')
+  keys = []
+  dgsinfo = {'raids':allinfo['raids'], 'pools':allinfo['pools'], 'disks':allinfo['disks']}
+  dgsinfo['newraid'] = newraids(allinfo['disks'])
+  if data['useable'] not in dgsinfo['newraid'][data['redundancy']]:
+   keys = list(dgsinfo['newraid'][data['redundancy']].keys())
+   keys.append(float(data['useable']))
+   keys.sort()
+   diskindx = keys.index(float(data['useable'])) + 1
+   if diskindx == len(keys):
+    diskindx = len(keys) - 2 
+   data['useable'] = keys[diskindx]
+  disks =  dgsinfo['newraid'][data['redundancy']][data['useable']]
+  if 'single' in data['redundancy']:
+   selecteddisks= disks
+  else:
+   bestdisks = selectdisks(leaderip, disks, allinfo['disks'])
+   if len(bestdisks) < 1:
+     return jsonify(data)
+   selecteddisks = bestdisks.split(',')
  diskstring = ''
  for dsk in selecteddisks:
   diskstring += dsk+":"+dsk[-5:]+" "
+
+ cachedisks = data['cache']
+ cachestring = ''
+ if cachedisks:
+  cachestring = "cache "
+  for dsk in cachedisks:
+   cachestring += dsk+":"+dsk[-5:]+" "
+
  print('#############################3')
  print(';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;')
  print(selecteddisks)
@@ -481,17 +500,17 @@ def dgsnewpool(data):
  data['owner'] = allinfo['disks'][selecteddisks[0]]['host']
  ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  if 'single' in data['redundancy']:
-  datastr = 'Single '+data['user']+' '+data['owner']+" "+selecteddisks[0]+" "+selecteddisks[0][-5:]+" nopool "+data['user']+" "+data['owner']
+  datastr = 'Single '+data['user']+' '+data['owner']+" "+selecteddisks[0]+" "+selecteddisks[0][-5:]+" "+cachestring+" "+" nopool "+data['user']+" "+data['owner']
  elif 'mirror' in data['redundancy']:
-  datastr = 'mirror '+data['user']+' '+data['owner']+" "+diskstring+"nopool "+data['user']+" "+data['owner']
+  datastr = 'mirror '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+"nopool "+data['user']+" "+data['owner']
  elif 'volset' in data['redundancy']:
-  datastr = 'stripeset '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
+  datastr = 'stripeset '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
  elif 'raid5' in data['redundancy']:
-  datastr = 'parity '+data['user']+' '+data['owner']+" "+diskstring
+  datastr = 'parity '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring
  elif 'raid6plus' in data['redundancy']:
-  datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
+  datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
  elif 'raid6' in data['redundancy']:
-  datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+data['user']+" "+data['owner']
+  datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
  cmndstring = '/TopStor/DGsetPool '+leaderip+' '+datastr+' '+data['user']
  postchange(cmndstring,data['owner'])
 # z= cmndstring.split(' ')
