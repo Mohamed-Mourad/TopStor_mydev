@@ -34,8 +34,8 @@ flag=1
 echo branch $branch
 chown 33:33 /root/gitrepo/git/*  -R
 chown 33:33 /root/gitrepo/git/  -R
-
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+echo myhostip=$myhostip
 while [ $flag -ne 0 ];
 do
 	rjobs=(`echo "${cjobs[@]}"`)
