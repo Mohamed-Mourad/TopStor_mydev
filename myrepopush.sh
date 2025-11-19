@@ -47,7 +47,7 @@ do
 		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		cd /$job
 	        repoloc=${myhostip}'/git/'$gitrepo
-		git remote -v | grep $reploc 
+		git remote -v | grep $repoloc 
 		if [ $? -ne 0 ];
 		then
 			cd /$job
