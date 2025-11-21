@@ -36,5 +36,6 @@ done
 systemctl stop docker
 systemctl stop iscsid 
 systemctl stop target 
+systemctl NetworkMnager restart
 #nmcli conn delete mynode
 #nmcli conn delete mycluster
