@@ -56,7 +56,6 @@ def getall(*bargs):
       cmports = val_clean
      elif 'dports' in b_key:
       dports = val_clean
-    else:
   try:
      ipaddrsubnet = get('ipaddr/'+hostname)[0].split('/')[1]
   except:
