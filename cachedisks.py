@@ -32,7 +32,7 @@ def _normalize_current_json(current_json):
 
 
 def main():
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 3:
         sys.exit(1)
 
     action = sys.argv[1]
@@ -58,7 +58,10 @@ def main():
     new_list = list(current_list)
 
     if action == "del":
-        new_list = [d for d in current_list if d not in disks_arg]
+        if not disks_arg:
+            new_list = []
+        else:
+            new_list = [d for d in current_list if d not in disks_arg]
     elif action == "add":
         for d in disks_arg:
             d = str(d)
