@@ -135,7 +135,6 @@ def getall(leadip, alldsks='0'):
     poolsdict[pool['name']]['Availability'] = 'None'
    for raid in pool['raidlist']:
     if 'free' not in raid['name']:
-     if disk['name'] in raidsdict['free']['disks']:
       raidname = raid['name']+'_'+pool['name']
     else:
       raidname = raid['name']
