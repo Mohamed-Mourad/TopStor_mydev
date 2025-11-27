@@ -484,7 +484,7 @@ def dgscachespares(data):
 
         return jsonify({
             'response': 'success',
-            'message': f'Queued adding of {len(disk_ids_to_store)} spare cache disks.'
+            'message': f'Queued adding of {len(disk_ids_to_store)} spare cache disks: {disks_str}'
         })
 
     except Exception as e:
