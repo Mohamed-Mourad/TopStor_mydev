@@ -181,7 +181,7 @@ then
 	then
 		mynode=$ipaddr
 	else
-		x=$(( ( RANDOM % 40 )  + 3 ))
+		x=$(( ( RANDOM % 31 )  + 10 ))
 		mynode='10.11.11.'$x'/24'
 	fi
 	nmcli conn delete mynode
