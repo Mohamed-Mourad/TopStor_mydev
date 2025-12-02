@@ -271,49 +271,44 @@ mynodeip=`echo $mynode | awk -F'/' '{print $1}'`
 myip=$mynodeip
 myhostip=$mynodeip
  #/pace/zfsping.py $leaderip $myhost & disown #### it is in refreshdisown
-echo $mynodedev | grep $myclusterdev
-if [ $? -eq 0 ];
-then
-case $isconf_prim in 
-nono)
-;;
-noyes)
-;;
-yesno)
-;;
-yesyes)
-;;
-esac
-if [ $isprimary -ne 0 ];
-then
-echo I am prmary
-nmcli conn delete cmynode 
-echo nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode ip4 $mycluster
-nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode ip4 $mycluster
+
+# --- CLEANUP PHASE (replaces lines 226-259) ---
+# Delete ALL temporary connections before creating final ones
+echo "Cleaning up temporary network connections..."
+nmcli conn delete mynode 2>/dev/null
+nmcli conn delete mycluster 2>/dev/null
+nmcli conn delete clusterstub 2>/dev/null
+nmcli conn delete cmynode 2>/dev/null
+nmcli conn delete cmycluster 2>/dev/null
+
+# --- CREATE FINAL CONNECTIONS ---
+# Now create the final connections based on device configuration
+echo "Device config - nodedev=$mynodedev, clusterdev=$myclusterdev"
+
+if [ "$mynodedev" = "$myclusterdev" ]; then
+    # Single device: combine into one connection
+    if [ $isprimary -ne 0 ]; then
+        echo "Primary: creating combined cmynode on $mynodedev with both IPs"
+        nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode ip4 $mycluster
+    else
+        echo "Non-primary: creating cmynode on $mynodedev"
+        nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
+    fi
 else
-echo I am a cluster node 
-nmcli conn delete cmynode 
-nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
-fi
-else
-case $isconf_prim in 
-nono)
-;;
-noyes)
-;;
-yesno)
-;;
-yesyes)
-;;
-esac
-nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
-nmcli conn add con-name cmycluster type bond ifname $myclusterdev ip4 $mycluster
-if [ $isprimary -ne 0 ];
-then
-nmcli conn up cmycluster
+    # Different devices: create separate connections
+    echo "Creating separate connections for different devices"
+    nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
+    nmcli conn add con-name cmycluster type bond ifname $myclusterdev ip4 $mycluster
+    if [ $isprimary -ne 0 ]; then
+        echo "Primary: bringing up cmycluster"
+        nmcli conn up cmycluster
+    fi
 fi
 
-fi
+# Bring up final connection(s)
+echo "Bringing up cmynode"
+nmcli conn up cmynode
+
 echo adding cmynode
 nmcli conn up cmynode
 if [[ $isconf == 'yes' ]];
