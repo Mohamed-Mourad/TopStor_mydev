@@ -575,17 +575,15 @@ else
     fi
   done;
   nextpool='dhcp'${RANDOM}$RANDOM;
- 
+
   if [[ $cache_disks == " " ]]; then
    docker exec etcdclient /TopStor/logmsg.py DGst19 info $userreq p${nextpool} $diskns
   else
    docker exec etcdclient /TopStor/logmsg.py DGst23 info $userreq p${nextpool} $data_diskns $cache_diskns
-  fi  
+  fi
 
   #docker exec etcdclient /TopStor/logmsg.py DGst19 info $userreq p${nextpool} $diskns
-
   #/sbin/zpool create -o cachefile=/TopStordata/p${nextpool} -o ashift=12 -o autoexpand=on -o autoreplace=on -f p${nextpool} mirror ${disk1} 2>/root/dgcreateerror
-
   /sbin/zpool create -o cachefile=/TopStordata/p${nextpool} -o ashift=12 -o autoexpand=on -o autoreplace=on -f p${nextpool} mirror ${data_disks} ${cache_disks} 2>/root/dgcreateerror
   echo "/sbin/zpool create -o cachefile=/TopStordata/p${nextpool} -o ashift=12 -o autoexpand=on -o autoreplace=on -f p${nextpool} mirror ${data_disks} ${cache_disks}" >> /TopStor/tmpCreatePoolCMD
 
@@ -611,17 +609,13 @@ else
      #ETCDCTL_API=3 /pace/etcdput.py $myhostip fixpool/p$nextpool running 
 
     #docker exec etcdclient /TopStor/logmsg.py DGsu19 info $userreq p${nextpool} $diskns
-  #else
-    #docker exec etcdclient /TopStor/logmsg.py DGfa19  error $userreq p${nextpool} $diskns
-
-    # LOGGING SUCCESS: Switch based on cache presence
     if [[ $cache_disks == " " ]]; then
      docker exec etcdclient /TopStor/logmsg.py DGsu19 info $userreq p${nextpool} $diskns
     else
      docker exec etcdclient /TopStor/logmsg.py DGsu23 info $userreq p${nextpool} $data_diskns $cache_diskns
     fi
   else
-    # LOGGING FAILURE: Switch based on cache presence
+    #docker exec etcdclient /TopStor/logmsg.py DGfa19  error $userreq p${nextpool} $diskns
     if [[ $cache_disks == " " ]]; then
      docker exec etcdclient /TopStor/logmsg.py DGfa19  error $userreq p${nextpool} $diskns
     else
