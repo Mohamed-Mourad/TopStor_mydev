@@ -283,6 +283,9 @@ DGfa21:2: : from :: Failed creating non-redundant Pool : using disks :
 DGst22:1: : from :: Importing Pool : 
 DGsu22:2: : from :: Success importing Pool :
 DGfa22:2: : from :: Failed to import Pool : 
+DGst23:1: : from :: Creating redundant Pool : using mirror array of disk : with cache disk :
+DGsu23:2: : from :: Success creating redundant Pool : using mirror array of disk : with cache disk :
+DGfa23:1: : from :: Failed to create redundant Pool : using mirror array of disk : with cache disk :
 Replica1008: Success in Rollback of snapshot :
 Replica1009: Adding Hourly replication schedule ......
 Replica1010: Problem occurred adding Hourly replication schedule
