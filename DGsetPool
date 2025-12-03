@@ -567,8 +567,10 @@ else
         disk=`ls /dev/disk/by-id/ | grep -v part | grep $disk`
         if [[ $mode == "data" ]]; then
             data_disks=${data_disks}$disk" "
+	    data_diskns=${data_diskns}$diskn","
         else
             cache_disks=${cache_disks}$disk" "
+	    cache_diskns=${cache_diskns}$diskn","
 	    echo "cash disk found: "$disk >> /TopStor/tmpCreatePoolCMD
         fi
         diskns=${diskns}$diskn","
