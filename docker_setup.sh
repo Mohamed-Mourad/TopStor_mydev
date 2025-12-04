@@ -166,6 +166,10 @@ targetcli clearconfig confirm=true
 #nmcli conn delete clusterstub 
 #nmcli conn delete mynode 
 #nmcli conn delete mycluster 
+
+nmcli conn mod mynode connection.interface-name $mynodedev
+nmcli conn mod mycluster connection.interface-name $myclusterdev
+
 nmcli conn up mynode
 nmcli conn delete cmynode
 nmcli conn delete cmycluster
