@@ -235,7 +235,6 @@ else
 	else
 		mycluster=`nmcli conn show mycluster | grep ipv4.addresses | awk '{print $2}'`
 		if [ "$myclusterdev" != "bond0" ]; then
-			echo "DEBUG: Switching mycluster from bond0 to $myclusterdev"
 			nmcli conn mod mycluster connection.interface-name $myclusterdev
 		fi
 	fi
