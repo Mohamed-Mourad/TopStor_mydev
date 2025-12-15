@@ -75,5 +75,5 @@ def getall(*bargs):
  print(allhosts)
  return hostsdict 
 
-if _name=='main_':
+if __name__=='__main__':
  getall(*sys.argv[1:])
