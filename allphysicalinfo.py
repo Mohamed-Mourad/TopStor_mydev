@@ -160,7 +160,8 @@ def getall(leadip, alldsks='0'):
       disksdict[disk['name']] = disk.copy()
       raiddisks.append(disk['name'])
       if disk['name'] in freedisks:
-       raidsdict['free']['disks'].remove(disk['name'])
+       if disk['name'] in raidsdict['free']['disks']:
+        raidsdict['free']['disks'].remove(disk['name'])
    poolvolumes = []
    poolsdict[pool['name']]['volumes'] = poolvolumes
    for volume in pool['volumes']:
@@ -227,6 +228,7 @@ def getall(leadip, alldsks='0'):
  print('snapperiods',snapperiodsdict) 
  '''
  #print('disks',disksdict)
+ print('pools',poolsdict)
  return {'hosts':hostsdict, 'pools':poolsdict, 'raids':raidsdict, 'disks':disksdict, 'volumes':volumesdict, 'snapshots':snapshotsdict, 'snapperiods':snapperiodsdict}
 
 def initallphy(ipadd):
