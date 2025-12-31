@@ -8,13 +8,21 @@ if [ $? -eq 0 ]; then
     done
 fi
 
-BOND_NAME='bond0';
+# clean up logical connections before proceeding
+#nmcli -t -f NAME conn show | grep -E '(node|cluster)' | while read -r conn; do
+#    echo "[*] Deleting old logical connection: $conn"
+#    nmcli conn delete "$conn"
+#done
 
-# Check if bond exists, if not create it
-if ! nmcli -t -f NAME,TYPE connection show | grep -q "^${BOND_NAME}:bond$"; then
-    echo "[*] Bond '$BOND_NAME' not found. Creating..."
-    /TopStor/create_bond.sh
-fi
+# --- CALL BOND RECONCILATION SCRIPT ---
+bonds=$(/TopStor/reconcile_bonds.sh | tr -d '\r')
+read -r nmbond cmbond dbond dbond <<< $bonds
+echo "After bonds reconcilation:"
+echo "    bonds: $bonds"
+echo "    Node Device: $nmbond"
+echo "    Cluster Device: $cmbond"
+echo "    Data1 Device: $dbond"
+echo "    Data2 Device: $dbond"
 
 modprobe bnx2
 modprobe hpsa 
@@ -148,10 +156,10 @@ then
 	eth2=$1
 fi
 
-mynodedev=$BOND_NAME
-myclusterdev=$BOND_NAME
-data1dev=$BOND_NAME
-data2dev=$BOND_NAME
+mynodedev=$nmbond
+myclusterdev=$cmbond
+data1dev=$dbond
+data2dev=$dbond
 setenforce 0
 aliast='alias'
 targetcli clearconfig confirm=true
@@ -205,6 +213,7 @@ else
 	if [ $ipaddrn -ge 5 ];
 	then
 		mynode=$ipaddr
+		nmcli conn mod mynode connection.interface-name $mynodedev
 		nmcli conn mod mynode ipv4.addresses $ipaddr
 		nmcli conn up mynode 
 	
@@ -217,20 +226,22 @@ else
 	if [ $caddrn -ge 5 ];
 	then
 		mycluster=$caddr
+		nmcli conn mod mycluster connection.interface-name $myclusterdev
 		nmcli conn mod mycluster ipv4.addresses $caddr
 	else
 		mycluster=`nmcli conn show mycluster | grep ipv4.addresses | awk '{print $2}'`
 	fi
 	myclusterip=`echo $mycluster | awk -F'/' '{print $1}'`
 	mynodeip=`echo $mynode | awk -F'/' '{print $1}'`
-# wait till the port is up
+	
+	# Wait for node to be up
 	ping -w 3 $mynodeip
-      	while [ $? -ne 0 ];
+	while [ $? -ne 0 ];
 	do
-		sleep 1
-		ping -w 3 $mynodeip
-	done
-# now the port should be up--- or other wise comment out all the above block and uncomment the below sleep
+	    sleep 1
+	    ping -w 3 $mynodeip
+	done 
+ 	# now the port should be up--- or other wise comment out all the above block and uncomment the below sleep
 	#sleep 20
 	
 	isconf_prim='yesno'

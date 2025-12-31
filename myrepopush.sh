@@ -34,8 +34,8 @@ flag=1
 echo branch $branch
 chown 33:33 /root/gitrepo/git/*  -R
 chown 33:33 /root/gitrepo/git/  -R
-
 myhostip=`docker exec etcdclient /TopStor/etcdgetlocal.py clusternodeip`
+echo myhostip=$myhostip
 while [ $flag -ne 0 ];
 do
 	rjobs=(`echo "${cjobs[@]}"`)
@@ -46,10 +46,12 @@ do
 		job=`echo $jobinfo | awk -F'_' '{print $1}'`
 		gitrepo=`echo $jobinfo | awk -F'_' '{print $2}'`'.git'
 		cd /$job
-		git remote -v | grep myrepo
+	        repoloc=${myhostip}'/git/'$gitrepo
+		git remote -v | grep $repoloc 
 		if [ $? -ne 0 ];
 		then
 			cd /$job
+			git remote remove myrepo
 			echo git remote add myrepo http://${myhostip}/git/$gitrepo
 			git remote add myrepo http://${myhostip}/git/$gitrepo
 			cd /root/gitrepo/git/$gitrepo
