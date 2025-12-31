@@ -52,6 +52,7 @@ else
     echo "[+] New bond config detected. Updating." >&2
     mv "$NEW_CONFIG_FILE" "$CONFIG_FILE"
     echo "[!] Config updated. Signaling for reboot." >&2
+    /TopStor/etcdput.py $ETCD_IP rebootme/`hostname` pls_frombonds
     exit 10
 fi
 
