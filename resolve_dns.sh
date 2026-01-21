@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+#set -e
 
 leaderip="$1"
 host_to_resolve="$2"
@@ -7,15 +7,18 @@ host_to_resolve="$2"
 max_retries=5
 retry_delay=3
 
+
 orig_resolv=$(mktemp)
 cp /etc/resolv.conf "$orig_resolv"
 
+
 for attempt in $(seq 1 "$max_retries"); do
-    ip=$(/pace/etcdget.py "$leaderip" dnsname --prefix | awk -F"'" '{print $4}')
-    
+    ip=$(/pace/etcdget.py "$leaderip" dnsname --prefix | awk -F"'" '{print $4}')      
+
     if [[ -n "$ip" ]]; then
         break
     fi
+
 
     if [[ "$attempt" -eq "$max_retries" ]]; then
         exit 1
@@ -39,7 +42,7 @@ cp "$orig_resolv" /etc/resolv.conf
 rm -f "$orig_resolv"
 
 if [[ -n "$resolved_ip" ]]; then
-    echo "RESOLVED_IP=${resolved_ip}="
+    echo "RESOLVEDIP=${resolved_ip}"
     exit 0
 fi
 
