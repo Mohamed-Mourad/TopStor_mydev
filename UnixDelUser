@@ -85,7 +85,7 @@ then
   then
   vol=`ETCDCTL_API=3 /pace/etcdget.py $etcd usersinfo/$username | awk -F'/' '{print $3}'`
   echo vol=$vol $userreq
- # ./VolumeDeleteHome.py $pool $vol $userreq
+ # ./VolumeDeleteHome.py $pool $vol $userreq
   fi
   /pace/etcddel.py $etcd users /$username/
   /pace/etcddel.py $etcd usershash $username

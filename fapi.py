@@ -1498,7 +1498,7 @@ def UnixAddUser(data):
 
 
  if int(is_unique_name(data['name']))==1000:
-    logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+    logmsg.sendlog('Unlin1021uv','error','system',data['name'])
     return data
     
  grps = data.get('groups')
