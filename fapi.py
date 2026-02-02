@@ -829,8 +829,14 @@ def userchange(data):
  if len(grps) < 1:
   groupstr = 'NoGroup'
  else:
+  #for grp in grps.split(','):
+  # groupstr += allgroups[int(grp)][0]+','
   for grp in grps.split(','):
-   groupstr += allgroups[int(grp)][0]+','
+    if grp.isdigit():
+        groupstr += allgroups[int(grp)][0] + ','
+    else:
+        groupstr += grp + ','
+
   groupstr = groupstr[:-1]
  cmndstring = '/TopStor/UnixChangeUser '+leaderip+' '+data.get('name')+' groups'+groupstr+' '+data['user']+' '+'change'
  postchange(cmndstring)
