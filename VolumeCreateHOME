@@ -54,13 +54,13 @@ then
   		docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq
   		exit
  	fi
-  	/pace/etcdget.py $etcd usersinfo --prefix | grep $shortname
-  	if [ $? -eq 0 ];
-  	then
-   		docker exec etcdclient /TopStor/logmsg.py Unlin1021vu warning $userreq $name
-   		docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq
-   		exit
-  	fi
+  	#/pace/etcdget.py $etcd usersinfo --prefix | grep $shortname
+  	#if [ $? -eq 0 ];
+  	#then
+   	#	docker exec etcdclient /TopStor/logmsg.py Unlin1021vu warning $userreq $name
+   	#	docker exec etcdclient /TopStor/logqueue.py `basename "$0"` finish $userreq
+   	#	exit
+  	#fi
  fi
  usermod -d /$DG/$name $shortname
  echo privileged $name >> /root/volcreate
@@ -122,6 +122,14 @@ then
  ETCDCTL_API=3 /pace/etcdput.py $leaderip volumes/HOMEE/$myhost/$DG/$name $DG/$name/no/yes/$writev/administrator/yes/$ipaddr/$ipsubnet/$active
  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request volumes_$stamp
  ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/volumes/${DG}_$name/request/$leader volumes_$stamp
+
+ current_userinfo=$(/pace/etcdget.py $leaderip usersinfo/$shortname 2>/dev/null)
+
+ if [ ! -z "$current_userinfo" ]; then
+  updated_userinfo=$(echo "$current_userinfo" | sed "s|/NoHome/|/$DG/|g" | awk -F'/' -v quota="$quota" '{OFS="/"; $4=quota; print}')
+  ETCDCTL_API=3 /pace/etcdput.py $leaderip usersinfo/$shortname "$updated_userinfo"
+ fi
+
  /TopStor/cifs.py $leader $leaderip $myhost $myhostip $etcd $DG $name $ipaddr $ipsubnet HOMEE 
  /pace/putzpool.py $leaderip  
  /TopStor/SnapshotCreateHourlytrend $leaderip $DG $name 0 24 7 system

@@ -971,7 +971,10 @@ def volumecreate(data):
     datatype='ANYthing'
  else:
     datatype=data['type']
- isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
+ if data['type'] == 'HOME':
+    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype))
+ else:
+    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype)) + int(is_unique_name(data['name']))
  if isvu == 0:
     print('ip is valid')
  else:
