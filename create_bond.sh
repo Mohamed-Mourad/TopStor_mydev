@@ -34,14 +34,24 @@ fi
 echo "[*] Reconciling bond '$BOND_NAME' with desired slaves: ${DESIRED_SLAVES[*]}" >&2
 
 # --- 2. Create bond if it doesn't exist ---
+# --- 2. Create bond or update existing ---
 if ! nmcli -t -f NAME,TYPE connection show | grep -q "^${BOND_NAME}:bond$"; then
     echo "[+] Bond $BOND_NAME not found. Creating..." >&2
     nmcli connection add type bond con-name "$BOND_NAME" ifname "$BOND_NAME" mode active-backup || true
-    nmcli connection modify "$BOND_NAME" bond.options "mode=active-backup,miimon=100,fail_over_mac=1"
+else
+    echo "[*] Bond '$BOND_NAME' already exists. Re-applying settings..." >&2
+fi
+
+# Apply settings (creation or update)
+nmcli connection modify "$BOND_NAME" bond.options "mode=active-backup,miimon=100,fail_over_mac=1"
+
+if [ "$BOND_NAME" == "ibond" ]; then
+    echo "[*] Configuring $BOND_NAME for Internet access (DHCP)..." >&2
+    nmcli connection modify "$BOND_NAME" ipv4.method auto
+    nmcli connection modify "$BOND_NAME" ipv6.method auto
+else
     nmcli connection modify "$BOND_NAME" ipv4.method disabled
     nmcli connection modify "$BOND_NAME" ipv6.method ignore
-else
-    echo "[*] Bond '$BOND_NAME' already exists." >&2
 fi
 
 # --- 3. Get CURRENT slaves ---

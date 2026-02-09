@@ -28,7 +28,7 @@ def config(leader, leaderip, myhost, *bargs):
   f.write(str(arglist)+'\n')
  stampi = str(stamp())
  ######### managing port bonds ###############
- if any(key in arglist for key in ['nmports', 'cmports', 'dports']):
+ if any(key in arglist for key in ['nmports', 'cmports', 'dports', 'iports']):
   node_ip = ''
   if 'ipaddr' in arglist:
    node_ip = arglist['ipaddr']
@@ -39,7 +39,7 @@ def config(leader, leaderip, myhost, *bargs):
 
   if node_ip:
    port_assignments = {
-    k: arglist[k] for k in ['nmports', 'cmports', 'dports'] if k in arglist
+    k: arglist[k] for k in ['nmports', 'cmports', 'dports', 'iports'] if k in arglist
    }
    manage_port_assignments(leaderip, node_ip, port_assignments, stampi, myhost)
   else:
@@ -189,7 +189,7 @@ def manage_port_assignments(leaderip, node_ip, assignments, stampi, myhost):
     print(f"Managing port assignments for node: {node_ip}")
     queuethis('manage_port_assignments', 'running', assignments)
     
-    bond_types = ['nmports', 'cmports', 'dports']
+    bond_types = ['nmports', 'cmports', 'dports', 'iports']
 
     # Read all existing bonds for this host
     all_node_bonds_raw = get(leaderip, f'bond/{myhost}/', f'--prefix')

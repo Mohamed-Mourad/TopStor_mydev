@@ -34,6 +34,7 @@ def getall(*bargs):
   nmports = ""
   cmports = ""
   dports = ""
+  iports = ""
   has_bond_config = False
   if bond_data:
    if len(bond_data) > 0:
@@ -56,6 +57,8 @@ def getall(*bargs):
       cmports = val_clean
      elif 'dports' in b_key:
       dports = val_clean
+     elif 'iports' in b_key:
+      iports = val_clean
   try:
      ipaddrsubnet = get('ipaddr/'+hostname)[0].split('/')[1]
   except:
@@ -69,8 +72,8 @@ def getall(*bargs):
   isLeader = False
   if (hostname == leader):
     isLeader = True
-  allhosts.append({"isLeader":isLeader, 'ports':ports,'name':hostname, 'configured':configured, 'alias':alias, 'ipaddr': hostip,'ipaddrsubnet':ipaddrsubnet, 'ntp':ntp, 'tz':tz, 'gw': gw,'dnsname':dnsname, 'dnssearch':dnssearch, 'cluster':mgmt, 'nmports': nmports, 'cmports': cmports, 'dports': dports})
-  hostsdict[hostname] = {"isLeader":isLeader, 'ports':ports, 'configured':configured, 'alias':alias, 'ipaddr': hostip, 'ipaddrsubnet':ipaddrsubnet, 'ntp':ntp, 'tz':tz, 'gw': gw, 'dnsname':dnsname, 'dnssearch':dnssearch, 'cluster':mgmt, 'nmports': nmports, 'cmports': cmports, 'dports': dports }
+  allhosts.append({"isLeader":isLeader, 'ports':ports,'name':hostname, 'configured':configured, 'alias':alias, 'ipaddr': hostip,'ipaddrsubnet':ipaddrsubnet, 'ntp':ntp, 'tz':tz, 'gw': gw,'dnsname':dnsname, 'dnssearch':dnssearch, 'cluster':mgmt, 'nmports': nmports, 'cmports': cmports, 'dports': dports, 'iports': iports})
+  hostsdict[hostname] = {"isLeader":isLeader, 'ports':ports, 'configured':configured, 'alias':alias, 'ipaddr': hostip, 'ipaddrsubnet':ipaddrsubnet, 'ntp':ntp, 'tz':tz, 'gw': gw, 'dnsname':dnsname, 'dnssearch':dnssearch, 'cluster':mgmt, 'nmports': nmports, 'cmports': cmports, 'dports': dports, 'iports': iports }
 
  print(allhosts)
  return hostsdict 
