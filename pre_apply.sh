@@ -14,7 +14,7 @@ docker rm -f react-dev-ui 2>/dev/null
 
 # 3. Spin up the new container and trap runtime failures
 echo "Starting UI container..."
-if ! docker run -d \
+if ! docker run -itd \
   --name react-dev-ui \
   --restart unless-stopped \
   --net bridge0 \
