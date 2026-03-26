@@ -1,35 +1,28 @@
 #!/usr/bin/sh
-eth1='enp0s8'
-eth2='enp0s8';
 
-# Get the current directory
-ports='/TopStordata/ports'
-if grep -q 'reset' /root/nodestatus; then
-	pports=$(ip a | grep -Po '(?<=^\d: )[^\:]+')
-	eth1=$(echo "$pports" | sed -n '2p')
-	eth2=$(echo "$pports" | sed -n '2p')
-	echo "$eth1" > $ports
-	echo "$eth2" >> $ports
+# if reset -> delete all nmcli conns
+echo "$@" | grep -q "reset"
+if [ $? -eq 0 ]; then
+    nmcli -t -f NAME conn show | grep -Ev '^(docker0|lo|br-)' | while read -r conn; do
+        nmcli conn delete "$conn"
+    done
 fi
 
-# Create an empty list
-eth_list=()
-if [ ! -f $ports ];
-then
-	eth_list=("$eth1")
-	eth_list+=("$eth2")
-	for item in "${eth_list[@]}"; do
-  		echo "$item" >> $ports
-	done
-else
-	while read -r line; do
-    		eth_list+=("$line")
-	done < "$ports"
-fi
+# clean up logical connections before proceeding
+#nmcli -t -f NAME conn show | grep -E '(node|cluster)' | while read -r conn; do
+#    echo "[*] Deleting old logical connection: $conn"
+#    nmcli conn delete "$conn"
+#done
 
-# Print the list
-eth1="${eth_list[0]}"
-eth2="${eth_list[1]}"
+# --- CALL BOND RECONCILATION SCRIPT ---
+bonds=$(/TopStor/reconcile_bonds.sh | tr -d '\r')
+read -r nmbond cmbond dbond dbond <<< $bonds
+echo "After bonds reconcilation:"
+echo "    bonds: $bonds"
+echo "    Node Device: $nmbond"
+echo "    Cluster Device: $cmbond"
+echo "    Data1 Device: $dbond"
+echo "    Data2 Device: $dbond"
 
 modprobe bnx2
 modprobe hpsa 
@@ -163,10 +156,10 @@ then
 	eth2=$1
 fi
 
-mynodedev=$eth1
-myclusterdev=$eth1
-data1dev=$eth2
-data2dev=$eth2
+mynodedev=$nmbond
+myclusterdev=$cmbond
+data1dev=$dbond
+data2dev=$dbond
 setenforce 0
 aliast='alias'
 targetcli clearconfig confirm=true
@@ -192,10 +185,10 @@ then
 		mynode='10.11.11.'$x'/24'
 	fi
 	nmcli conn delete mynode
-	nmcli conn add con-name mynode type ethernet ifname $mynodedev ip4 $mynode
+	nmcli conn add con-name mynode type bond ifname $mynodedev ip4 $mynode
 	nmcli conn mynode up
 	nmcli conn delete clusterstub
-	nmcli conn add con-name clusterstub type ethernet ifname $myclusterdev ip4 169.168.12.12 
+	nmcli conn add con-name clusterstub type bond ifname $myclusterdev ip4 169.168.12.12 
 	#nmcli conn up clusterstub 
 
 	ping -w 3 10.11.11.250
@@ -212,7 +205,7 @@ then
 		echo the ping found the initial cluster so I will not be primary
 	fi
 	nmcli conn delete mycluster
-	nmcli conn add con-name mycluster type ethernet ifname $myclusterdev ip4 $mycluster
+	nmcli conn add con-name mycluster type bond ifname $myclusterdev ip4 $mycluster
 else
 	isconf='yes'
 	ipaddr=`cat /root/newipaddr`
@@ -220,11 +213,16 @@ else
 	if [ $ipaddrn -ge 5 ];
 	then
 		mynode=$ipaddr
+		nmcli conn mod mynode connection.interface-name $mynodedev
 		nmcli conn mod mynode ipv4.addresses $ipaddr
 		nmcli conn up mynode 
 	
 	else
 		mynode=`nmcli conn show mynode | grep ipv4.addresses | awk '{print $2}'`
+		if [ "$mynodedev" != "bond0" ]; then
+			nmcli conn mod mynode connection.interface-name $mynodedev
+			nmcli conn up mynode
+		fi
 	fi
 
 	caddr=`cat /root/newcaddr`
@@ -232,20 +230,25 @@ else
 	if [ $caddrn -ge 5 ];
 	then
 		mycluster=$caddr
+		nmcli conn mod mycluster connection.interface-name $myclusterdev
 		nmcli conn mod mycluster ipv4.addresses $caddr
 	else
 		mycluster=`nmcli conn show mycluster | grep ipv4.addresses | awk '{print $2}'`
+		if [ "$myclusterdev" != "bond0" ]; then
+			nmcli conn mod mycluster connection.interface-name $myclusterdev
+		fi
 	fi
 	myclusterip=`echo $mycluster | awk -F'/' '{print $1}'`
 	mynodeip=`echo $mynode | awk -F'/' '{print $1}'`
-# wait till the port is up
+	
+	# Wait for node to be up
 	ping -w 3 $mynodeip
-      	while [ $? -ne 0 ];
+	while [ $? -ne 0 ];
 	do
-		sleep 1
-		ping -w 3 $mynodeip
-	done
-# now the port should be up--- or other wise comment out all the above block and uncomment the below sleep
+	    sleep 1
+	    ping -w 3 $mynodeip
+	done 
+ 	# now the port should be up--- or other wise comment out all the above block and uncomment the below sleep
 	#sleep 20
 	
 	isconf_prim='yesno'
@@ -292,12 +295,12 @@ if [ $isprimary -ne 0 ];
 then
 echo I am prmary
 nmcli conn delete cmynode 
-echo nmcli conn add con-name cmynode type ethernet ifname $mynodedev ip4 $mynode ip4 $mycluster
-nmcli conn add con-name cmynode type ethernet ifname $mynodedev ip4 $mynode ip4 $mycluster
+echo nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode ip4 $mycluster
+nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode ip4 $mycluster
 else
 echo I am a cluster node 
 nmcli conn delete cmynode 
-nmcli conn add con-name cmynode type ethernet ifname $mynodedev ip4 $mynode
+nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
 fi
 else
 case $isconf_prim in 
@@ -310,8 +313,8 @@ yesno)
 yesyes)
 ;;
 esac
-nmcli conn add con-name cmynode type ethernet ifname $mynodedev ip4 $mynode
-nmcli conn add con-name cmycluster type ethernet ifname $myclusterdev ip4 $mycluster
+nmcli conn add con-name cmynode type bond ifname $mynodedev ip4 $mynode
+nmcli conn add con-name cmycluster type bond ifname $myclusterdev ip4 $mycluster
 if [ $isprimary -ne 0 ];
 then
 nmcli conn up cmycluster
@@ -613,9 +616,11 @@ fi
 mydns=`/TopStor/etcdget.py $myclusterip dnsname/$myhost`
 #nmcli conn modify cmynode ipv4.dns ''
 nmcli conn modify cmynode ipv4.dns $mydns
-nmcli conn up cmynode
+nmcli con modify cmynode bond.options "mode=active-backup,miimon=100,fail_over_mac=1"
+nmcli conn down cmynode && nmcli conn up cmynode
 docker rm -f promexport
 docker run -d -p $mynodeip:9100:9100 -v /proc:/proc -v /sys:/sys --name promexport prom/node-exporter
 docker rm -f promcadvisor
 docker run   --volume=/:/rootfs:ro   --volume=/var/run:/var/run:ro   --volume=/sys:/sys:ro   --volume=/var/lib/docker/:/var/lib/docker:ro   --volume=/dev/disk/:/dev/disk:ro   --publish=$mynodeip:9101:8080   --detach=true   --name=promcadvisor   --privileged   --device=/dev/kmsg   gcr.io/cadvisor/cadvisor
+/TopStor/registerports.sh $myclusterip
 /pace/fapilooper.sh & disown
