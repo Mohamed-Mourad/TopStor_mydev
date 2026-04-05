@@ -110,6 +110,7 @@ Unlin1024:2: : from :: user : will have a home directory in pool :
 Unlin1025:0: : from :: File uploaded successfully! Adding users started
 Unlin1026:0: : from :: Failed uploading file
 Unlin1027:0: : from :: Finished adding users
+Unlin1028:1: : from :: User : already has a home folder in pool :
 IPaddrfa:0: : from :: Invalid IP address in the request 
 IPadduqfa:0: : from :: The IP address is already in use 
 IPnamuqfa:0: : from :: The name is already in use 
@@ -357,6 +358,7 @@ contpst03:2: : from :: Start unmounting and destorying volume : type :
 contper03:2: : from :: Wrong volume entry in the registry database : : 
 contpin03:2: : from :: Detected Deletion task of volume : which is requested by : 
 contpin04:2: : from :: No registery information for volume : for host  :  so abort trying to delete it.
+contpst04:2: : from :: Stopping blocking container : for volume :
 Evacuaest01:1: : from :: Start Evacuating node :
 Evacuaesu01:1: : from :: Success Evacuating node :
 AddHostst01:2: : from :: Start Adding the new node : to the cluster

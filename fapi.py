@@ -829,8 +829,14 @@ def userchange(data):
  if len(grps) < 1:
   groupstr = 'NoGroup'
  else:
+  #for grp in grps.split(','):
+  # groupstr += allgroups[int(grp)][0]+','
   for grp in grps.split(','):
-   groupstr += allgroups[int(grp)][0]+','
+    if grp.isdigit():
+        groupstr += allgroups[int(grp)][0] + ','
+    else:
+        groupstr += grp + ','
+
   groupstr = groupstr[:-1]
  cmndstring = '/TopStor/UnixChangeUser '+leaderip+' '+data.get('name')+' groups'+groupstr+' '+data['user']+' '+'change'
  postchange(cmndstring)
@@ -971,7 +977,10 @@ def volumecreate(data):
     datatype='ANYthing'
  else:
     datatype=data['type']
- isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
+ if data['type'] == 'HOME':
+    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype))
+ else:
+    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype)) + int(is_unique_name(data['name']))
  if isvu == 0:
     print('ip is valid')
  else:
@@ -1498,7 +1507,7 @@ def UnixAddUser(data):
 
 
  if int(is_unique_name(data['name']))==1000:
-    logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
+    logmsg.sendlog('Unlin1021uv','error','system',data['name'])
     return data
     
  grps = data.get('groups')

@@ -64,7 +64,7 @@ echo "[*] Available NICs: ${ALL_PORTS_ARR[*]}" >&2
 
 # --- 2. Load config ---
 CONFIG_FILE="/TopStordata/bondconfig"
-NMPORTS_STR=""; CMPORTS_STR=""; DPORTS_STR=""
+NMPORTS_STR=""; CMPORTS_STR=""; DPORTS_STR=""; IPORTS_STR=""
 
 if [ -f "$CONFIG_FILE" ]; then
     echo "[*] Loading bond config from $CONFIG_FILE" >&2
@@ -77,9 +77,10 @@ echo "[*] Desired config:" >&2
 echo "    nmports: $NMPORTS_STR" >&2
 echo "    cmports: $CMPORTS_STR" >&2
 echo "    dports: $DPORTS_STR" >&2
+echo "    iports: $IPORTS_STR" >&2
 
 # --- 3. Handle all-empty ---
-if [ -z "$NMPORTS_STR" ] && [ -z "$CMPORTS_STR" ] && [ -z "$DPORTS_STR" ]; then
+if [ -z "$NMPORTS_STR" ] && [ -z "$CMPORTS_STR" ] && [ -z "$DPORTS_STR" ] && [ -z "$IPORTS_STR" ]; then
     echo "[*] Empty config detected — using bond0 for all roles." >&2
     ALL_PORTS_STR=$(echo "${ALL_PORTS_ARR[*]}" | tr ' ' '/')
     /TopStor/create_bond.sh bond0 "$ALL_PORTS_STR"
@@ -96,6 +97,7 @@ done
 NM_BOND="nm_bond"
 CM_BOND="cm_bond"
 D_BOND="d_bond"
+I_BOND="ibond"
 DEFAULT_BOND="bond0"
 ASSIGNED_PORTS_ARR=()
 
@@ -103,6 +105,7 @@ ASSIGNED_PORTS_ARR=()
 NM_VALID=$(filter_local_ports "$NMPORTS_STR" "${ALL_PORTS_ARR[@]}")
 CM_VALID=$(filter_local_ports "$CMPORTS_STR" "${ALL_PORTS_ARR[@]}")
 D_VALID=$(filter_local_ports "$DPORTS_STR" "${ALL_PORTS_ARR[@]}")
+I_VALID=$(filter_local_ports "$IPORTS_STR" "${ALL_PORTS_ARR[@]}")
 
 # --- 5. Create bonds (with identical check) ---
 mynodedev=""
@@ -128,6 +131,10 @@ elif [ -n "$D_VALID" ] && [ "$D_VALID" == "$CM_VALID" ] && [ -n "$myclusterdev" 
     data1dev=$myclusterdev
 elif create_bond_if_valid "$D_BOND" "$D_VALID"; then
     data1dev=$D_BOND
+fi
+
+if create_bond_if_valid "$I_BOND" "$I_VALID"; then
+    echo "[+] ibond created with ports: $I_VALID" >&2
 fi
 
 data2dev=$data1dev
@@ -190,3 +197,4 @@ echo "    Data:    $data1dev" >&2
 
 # Output final mapping
 echo "$mynodedev $myclusterdev $data1dev $data2dev" >&3
+
