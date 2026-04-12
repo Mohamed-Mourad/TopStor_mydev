@@ -18,7 +18,7 @@ if ! docker run -itd \
   --name react-dev-ui \
   --restart unless-stopped \
   --net bridge0 \
-  -p 5173:5173 \
+  -p 10.11.11.250:5173:5173 \
   -v /topstorweb:/app \
   -v /app/node_modules \
   quickstor-ui:latest; then
