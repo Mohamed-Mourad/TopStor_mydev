@@ -21,6 +21,7 @@ from fapistats import allvolstats, dskperf, cpuperf
 from datetime import datetime
 from getallraids import newraids
 from fastselect import selectdisks
+from raid10 import selectraid10
 from secrets import token_hex
 from ioperf import ioperf
 from time import time as timestamp
@@ -426,6 +427,11 @@ def dgsaddtopool(data):
  disks =  dgsinfo['newraid'][data['redundancy']][data['useable']]
  if 'single' in data['redundancy']:
   selecteddisks= disks
+ elif 'raid10' in data['redundancy']:
+  bestdisks = selectraid10(leaderip,disks,allinfo['disks'],data['pool'])
+  if len(bestdisks) < 1:
+    return jsonify(data)
+  selecteddisks = bestdisks.split(',')
  else:
   print('#########################')
   print('disks',disks)
@@ -449,6 +455,8 @@ def dgsaddtopool(data):
   datastr = 'addparity '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid6plus' in data['redundancy']:
   datastr = 'addparity3 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
+ elif 'raid10' in data['redundancy']:
+  datastr = 'addraid10 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid6' in data['redundancy']:
   datastr = 'addparity2 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  cmndstring = '/TopStor/DGsetPool '+leaderip+' '+datastr
@@ -554,6 +562,11 @@ def dgsnewpool(data):
 
         if 'single' in data['redundancy']:
             selecteddisks = disks
+        elif 'raid10' in data['redundancy']:
+            bestdisks = selectraid10(leaderip, disks, allinfo['disks'])
+            if len(bestdisks) < 1:
+                return jsonify(data)
+            selecteddisks = bestdisks.split(',')
         else:
             bestdisks = selectdisks(leaderip, disks, allinfo['disks'])
             if len(bestdisks) < 1:
@@ -611,6 +624,8 @@ def dgsnewpool(data):
         datastr = 'parity '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring
     elif 'raid6plus' in data['redundancy']:
         datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+    elif 'raid10' in data['redundancy']:
+        datastr = 'raid10 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
     elif 'raid6' in data['redundancy']:
         datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
 
@@ -829,14 +844,8 @@ def userchange(data):
  if len(grps) < 1:
   groupstr = 'NoGroup'
  else:
-  #for grp in grps.split(','):
-  # groupstr += allgroups[int(grp)][0]+','
   for grp in grps.split(','):
-    if grp.isdigit():
-        groupstr += allgroups[int(grp)][0] + ','
-    else:
-        groupstr += grp + ','
-
+   groupstr += allgroups[int(grp)][0]+','
   groupstr = groupstr[:-1]
  cmndstring = '/TopStor/UnixChangeUser '+leaderip+' '+data.get('name')+' groups'+groupstr+' '+data['user']+' '+'change'
  postchange(cmndstring)
@@ -977,10 +986,7 @@ def volumecreate(data):
     datatype='ANYthing'
  else:
     datatype=data['type']
- if data['type'] == 'HOME':
-    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype))
- else:
-    isvu = int(is_valid_ip(data['ipaddress'])) + int(is_unique_ip(data['ipaddress'], datatype)) + int(is_unique_name(data['name']))
+ isvu =  int(is_valid_ip(data['ipaddress']))+int(is_unique_ip(data['ipaddress'],datatype))+int(is_unique_name(data['name']))
  if isvu == 0:
     print('ip is valid')
  else:
@@ -1507,7 +1513,7 @@ def UnixAddUser(data):
 
 
  if int(is_unique_name(data['name']))==1000:
-    logmsg.sendlog('Unlin1021uv','error','system',data['name'])
+    logmsg.sendlog('IPnamuqfa','error','system',loggedusers[data['token']]['user'])
     return data
     
  grps = data.get('groups')
@@ -1815,3 +1821,4 @@ if __name__=='__main__':
     getalltime()
    #myhostip = sys.argv[5]
     app.run(host="0.0.0.0", port=5001)
+
