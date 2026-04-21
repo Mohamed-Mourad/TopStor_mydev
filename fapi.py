@@ -22,6 +22,7 @@ from datetime import datetime
 from getallraids import newraids
 from fastselect import selectdisks
 from raid10 import selectraid10
+from raid5060 import selectraid50, selectraid60
 from secrets import token_hex
 from ioperf import ioperf
 from time import time as timestamp
@@ -426,9 +427,19 @@ def dgsaddtopool(data):
   data['useable'] = keys[diskindx]
  disks =  dgsinfo['newraid'][data['redundancy']][data['useable']]
  if 'single' in data['redundancy']:
-  selecteddisks= disks
+  selecteddisks = disks
  elif 'raid10' in data['redundancy']:
   bestdisks = selectraid10(leaderip,disks,allinfo['disks'],data['pool'])
+  if len(bestdisks) < 1:
+    return jsonify(data)
+  selecteddisks = bestdisks.split(',')
+ elif 'raid50' in data['redundancy']:
+  bestdisks = selectraid50(leaderip,disks,allinfo['disks'],data['pool'])
+  if len(bestdisks) < 1:
+    return jsonify(data)
+  selecteddisks = bestdisks.split(',')
+ elif 'raid60' in data['redundancy']:
+  bestdisks = selectraid60(leaderip,disks,allinfo['disks'],data['pool'])
   if len(bestdisks) < 1:
     return jsonify(data)
   selecteddisks = bestdisks.split(',')
@@ -439,9 +450,9 @@ def dgsaddtopool(data):
   bestdisks = selectdisks(leaderip,disks,allinfo['disks'],data['pool'])
   print('bestdisks',bestdisks)
   print('#########################')
- if len(bestdisks) < 1:
+  if len(bestdisks) < 1:
     return jsonify(data)
- selecteddisks = bestdisks.split(',')
+  selecteddisks = bestdisks.split(',')
  data['owner'] = allinfo['pools'][data['pool']]['host']
  ownerip = allinfo['hosts'][data['owner']]['ipaddress']
  diskstring = ''
@@ -457,6 +468,10 @@ def dgsaddtopool(data):
   datastr = 'addparity3 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid10' in data['redundancy']:
   datastr = 'addraid10 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
+ elif 'raid50' in data['redundancy']:
+  datastr = 'addraid50 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
+ elif 'raid60' in data['redundancy']:
+  datastr = 'addraid60 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  elif 'raid6' in data['redundancy']:
   datastr = 'addparity2 '+data['user']+' '+data['owner']+" "+diskstring+data['pool']
  cmndstring = '/TopStor/DGsetPool '+leaderip+' '+datastr
@@ -567,6 +582,16 @@ def dgsnewpool(data):
             if len(bestdisks) < 1:
                 return jsonify(data)
             selecteddisks = bestdisks.split(',')
+        elif 'raid50' in data['redundancy']:
+            bestdisks = selectraid50(leaderip, disks, allinfo['disks'])
+            if len(bestdisks) < 1:
+                return jsonify(data)
+            selecteddisks = bestdisks.split(',')
+        elif 'raid60' in data['redundancy']:
+            bestdisks = selectraid60(leaderip, disks, allinfo['disks'])
+            if len(bestdisks) < 1:
+                return jsonify(data)
+            selecteddisks = bestdisks.split(',')
         else:
             bestdisks = selectdisks(leaderip, disks, allinfo['disks'])
             if len(bestdisks) < 1:
@@ -626,6 +651,10 @@ def dgsnewpool(data):
         datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
     elif 'raid10' in data['redundancy']:
         datastr = 'raid10 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+    elif 'raid50' in data['redundancy']:
+        datastr = 'raid50 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+    elif 'raid60' in data['redundancy']:
+        datastr = 'raid60 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
     elif 'raid6' in data['redundancy']:
         datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
 

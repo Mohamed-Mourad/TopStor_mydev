@@ -163,6 +163,78 @@ else
     docker exec etcdclient /TopStor/logmsg.py DGfa23 error $userreq ${nextpool} $diskns .
   fi
  fi 
+   if [[ $raid == "addraid50" ]]; then
+    diskargs=$((diskargs-1));
+    i=3
+    all_disks=()
+    diskns="";
+    /pace/diskchange.sh dgsetpool dgsetpool dgsetpool
+    while [ $i -lt $((diskargs)) ]; do
+     i=$((i+1));
+     disk=`echo ${params[$i]} | awk -F':' '{print $1}'`
+     diskn=`echo ${params[$i]} | awk -F':' '{print $2}'`
+     disk=`ls /dev/disk/by-id/ | grep -v part | grep $disk`
+     all_disks+=(${disk})
+     diskns=${diskns}$diskn","
+    done;
+    num_disks=${#all_disks[@]}
+    if [ $num_disks -lt 6 ] || [ $((num_disks % 3)) -ne 0 ]; then
+     docker exec etcdclient /TopStor/logmsg.py DGfa16 error $userreq ${nextpool} $diskns .
+    else
+     raidz_groups=""
+     for (( idx=0; idx<num_disks; idx+=3 )); do
+      raidz_groups="${raidz_groups} raidz1 ${all_disks[$idx]} ${all_disks[$((idx+1))]} ${all_disks[$((idx+2))]}"
+     done
+     docker exec etcdclient /TopStor/logmsg.py DGst16 info $userreq ${nextpool} $diskns .
+     /sbin/zpool add -f ${nextpool} ${raidz_groups} 2>/TopStordata/zpoolerr
+     if [ $? -eq 0 ]; then
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip 'pools/'$nextpool $myhost
+        stamp=`date +%s`
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_${nextpool}_$myhost/request pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_${nextpool}_$myhost/request/$leader pools_$stamp 
+       docker exec etcdclient /TopStor/logmsg.py DGsu16 info $userreq ${nextpool} $diskns .
+     else
+       cat /TopStordata/zpoolerr
+       docker exec etcdclient /TopStor/logmsg.py DGfa16 error $userreq ${nextpool} $diskns .
+     fi
+    fi
+   fi 
+   if [[ $raid == "addraid60" ]]; then
+    diskargs=$((diskargs-1));
+    i=3
+    all_disks=()
+    diskns="";
+    /pace/diskchange.sh dgsetpool dgsetpool dgsetpool
+    while [ $i -lt $((diskargs)) ]; do
+     i=$((i+1));
+     disk=`echo ${params[$i]} | awk -F':' '{print $1}'`
+     diskn=`echo ${params[$i]} | awk -F':' '{print $2}'`
+     disk=`ls /dev/disk/by-id/ | grep -v part | grep $disk`
+     all_disks+=(${disk})
+     diskns=${diskns}$diskn","
+    done;
+    num_disks=${#all_disks[@]}
+    if [ $num_disks -lt 8 ] || [ $((num_disks % 4)) -ne 0 ]; then
+     docker exec etcdclient /TopStor/logmsg.py DGfa14 error $userreq ${nextpool} $diskns .
+    else
+     raidz_groups=""
+     for (( idx=0; idx<num_disks; idx+=4 )); do
+      raidz_groups="${raidz_groups} raidz2 ${all_disks[$idx]} ${all_disks[$((idx+1))]} ${all_disks[$((idx+2))]} ${all_disks[$((idx+3))]}"
+     done
+     docker exec etcdclient /TopStor/logmsg.py DGst14 info $userreq ${nextpool} $diskns .
+     /sbin/zpool add -f ${nextpool} ${raidz_groups} 2>/TopStordata/zpoolerr
+     if [ $? -eq 0 ]; then
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip 'pools/'$nextpool $myhost
+        stamp=`date +%s`
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_${nextpool}_$myhost/request pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_${nextpool}_$myhost/request/$leader pools_$stamp 
+       docker exec etcdclient /TopStor/logmsg.py DGsu14 info $userreq ${nextpool} $diskns .
+     else
+       cat /TopStordata/zpoolerr
+       docker exec etcdclient /TopStor/logmsg.py DGfa14 error $userreq ${nextpool} $diskns .
+     fi
+    fi
+   fi 
  if [[ $raid == "attachmirror" ]]; then
   disk2=` echo $@ | awk '{print $7}'`;
   #disk2=`ls /dev/disk/by-id/ | grep -v part | grep $disk2`
@@ -635,6 +707,146 @@ else
     docker exec etcdclient /TopStor/logmsg.py DGfa24 error $userreq p${nextpool} $diskns
   fi
  fi 
+   if [[ $raid == "raid50" ]]; then
+    diskargs=${#params[@]};
+    diskargs=$((diskargs-1));
+    i=3
+    all_disks=()
+    diskns=""
+
+    cache_disks=" "
+    mode="data"
+
+    /pace/diskchange.sh dgsetpool dgsetpool dgsetpool
+    while [ $i -lt $diskargs ]; do
+      i=$((i+1));
+      arg=${params[$i]}
+
+      if [[ $arg == "nopool" ]]; then
+          break
+      fi
+
+      if [[ $arg == "cache" ]]; then
+          mode="cache"
+          cache_disks="cache "
+      else
+          disk=`echo ${params[$i]} | awk -F':' '{print $1}'`
+          diskn=`echo ${params[$i]} | awk -F':' '{print $2}'`
+          disk=`ls /dev/disk/by-id/ | grep -v part | grep $disk`
+          if [[ $mode == "data" ]]; then
+              all_disks+=(${disk})
+          else
+              cache_disks=${cache_disks}$disk" "
+          fi
+          diskns=${diskns}$diskn","
+      fi
+    done;
+    num_disks=${#all_disks[@]}
+    if [ $num_disks -lt 6 ] || [ $((num_disks % 3)) -ne 0 ]; then
+     docker exec etcdclient /TopStor/logmsg.py DGfa17 error $userreq p${nextpool} $diskns
+    else
+     raidz_groups=""
+     for (( idx=0; idx<num_disks; idx+=3 )); do
+      raidz_groups="${raidz_groups} raidz1 ${all_disks[$idx]} ${all_disks[$((idx+1))]} ${all_disks[$((idx+2))]}"
+     done
+     nextpool='dhcp'${RANDOM}$RANDOM;
+     docker exec etcdclient /TopStor/logmsg.py DGst17 info $userreq p${nextpool} $diskns
+     /sbin/zpool create -o cachefile=/TopStordata/p${nextpool} -o ashift=12 -o autoexpand=on -o autoreplace=on -f p${nextpool} ${raidz_groups} ${cache_disks} 2>/root/dgcreateerror
+
+     if [ $? -eq 0 ]; then
+        zfs set acltype=posixacl p$nextpool
+        zfs set avail:type=raid50 p$nextpool
+        zfs set expand:yes=no  p$nextpool
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip pools/p$nextpool $myhost
+        stamp=`date +%s`
+        guid=`zpool get guid p$nextpool -H | awk '{print $3}'`
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip ActPools/p$nextpool $guid
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/ActPool/Add_p${nextpool}_$guid/request actpools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/ActPool/Add_p${nextpool}_$guid/request/$leader actpools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_p${nextpool}_$myhost/request pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_p${nextpool}_$myhost/request/$leader pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip balancetype/p$nextpool Availability 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/balancedtype/Add_p${nextpool}_Availability/request balancedtype_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/balancedtype/Add_p${nextpool}_Availability/request/$leader balancedtype_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip activepool/p$nextpool running 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/activepool/Add_p${nextpool}_running/request activepool_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/activepool/Add_p${nextpool}_running/request/$leader activepool_$stamp 
+       docker exec etcdclient /TopStor/logmsg.py DGsu17 info $userreq p${nextpool} $diskns
+     else
+       docker exec etcdclient /TopStor/logmsg.py DGfa17 error $userreq p${nextpool} $diskns
+     fi
+    fi
+   fi 
+   if [[ $raid == "raid60" ]]; then
+    diskargs=${#params[@]};
+    diskargs=$((diskargs-1));
+    i=3
+    all_disks=()
+    diskns=""
+
+    cache_disks=" "
+    mode="data"
+
+    /pace/diskchange.sh dgsetpool dgsetpool dgsetpool
+    while [ $i -lt $diskargs ]; do
+      i=$((i+1));
+      arg=${params[$i]}
+
+      if [[ $arg == "nopool" ]]; then
+          break
+      fi
+
+      if [[ $arg == "cache" ]]; then
+          mode="cache"
+          cache_disks="cache "
+      else
+          disk=`echo ${params[$i]} | awk -F':' '{print $1}'`
+          diskn=`echo ${params[$i]} | awk -F':' '{print $2}'`
+          disk=`ls /dev/disk/by-id/ | grep -v part | grep $disk`
+          if [[ $mode == "data" ]]; then
+              all_disks+=(${disk})
+          else
+              cache_disks=${cache_disks}$disk" "
+          fi
+          diskns=${diskns}$diskn","
+      fi
+    done;
+    num_disks=${#all_disks[@]}
+    if [ $num_disks -lt 8 ] || [ $((num_disks % 4)) -ne 0 ]; then
+     docker exec etcdclient /TopStor/logmsg.py DGfa15 error $userreq p${nextpool} $diskns
+    else
+     raidz_groups=""
+     for (( idx=0; idx<num_disks; idx+=4 )); do
+      raidz_groups="${raidz_groups} raidz2 ${all_disks[$idx]} ${all_disks[$((idx+1))]} ${all_disks[$((idx+2))]} ${all_disks[$((idx+3))]}"
+     done
+     nextpool='dhcp'${RANDOM}$RANDOM;
+     docker exec etcdclient /TopStor/logmsg.py DGst15 info $userreq p${nextpool} $diskns
+     /sbin/zpool create -o cachefile=/TopStordata/p${nextpool} -o ashift=12 -o autoexpand=on -o autoreplace=on -f p${nextpool} ${raidz_groups} ${cache_disks} 2>/root/dgcreateerror
+
+     if [ $? -eq 0 ]; then
+        zfs set acltype=posixacl p$nextpool
+        zfs set avail:type=raid60 p$nextpool
+        zfs set expand:yes=no  p$nextpool
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip pools/p$nextpool $myhost
+        stamp=`date +%s`
+        guid=`zpool get guid p$nextpool -H | awk '{print $3}'`
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip ActPools/p$nextpool $guid
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/ActPool/Add_p${nextpool}_$guid/request actpools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/ActPool/Add_p${nextpool}_$guid/request/$leader actpools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_p${nextpool}_$myhost/request pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/pools/Add_p${nextpool}_$myhost/request/$leader pools_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip balancetype/p$nextpool Availability 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/balancedtype/Add_p${nextpool}_Availability/request balancedtype_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/balancedtype/Add_p${nextpool}_Availability/request/$leader balancedtype_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip activepool/p$nextpool running 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/activepool/Add_p${nextpool}_running/request activepool_$stamp 
+        ETCDCTL_API=3 /pace/etcdput.py $leaderip sync/activepool/Add_p${nextpool}_running/request/$leader activepool_$stamp 
+       docker exec etcdclient /TopStor/logmsg.py DGsu15 info $userreq p${nextpool} $diskns
+     else
+       docker exec etcdclient /TopStor/logmsg.py DGfa15 error $userreq p${nextpool} $diskns
+     fi
+    fi
+   fi 
  if [[ $raid == "mirror" ]]; then
   diskargs=${#params[@]};
   diskargs=$((diskargs-1));
