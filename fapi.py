@@ -1805,6 +1805,73 @@ def localFileUpdate(data):
         uploaded_file.save(filePath)
         return {"data": 'success'}
     return {"data": uploaded_file.filename}
+
+@app.route('/api/v1/telemetry/heartbeat', methods=['POST', 'GET'])
+def telemetry_heartbeat():
+    # Write the current epoch time to a file
+    try:
+        with open('/tmp/ui_active_heartbeat', 'w') as f:
+            f.write(str(int(timestamp())))
+        return {"status": "boost_active"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route('/api/v1/info/summary', methods=['GET', 'POST'])
+def get_service_summary():
+    # Since fapi runs on the leader node, etcd is accessible on localhost
+    leaderip = '127.0.0.1' 
+
+    # Helper function to grab the count of keys for a given prefix natively
+    def count_etcd_keys(prefix):
+        try:
+            data = etcdgetjson(leaderip, prefix, '--prefix')
+            return len(data) if data else 0
+        except Exception:
+            return 0
+
+    try:
+        # 1. Get exact counts using trailing slashes to avoid partial matches
+        users_count = count_etcd_keys('usersinfo/')
+        groups_count = count_etcd_keys('usersigroup/')
+        pools_count = count_etcd_keys('pools/')
+
+        # 2. Categorize Volumes
+        cifs_count = 0
+        nfs_count = 0
+        iscsi_count = 0
+
+        try:
+            volumes_data = etcdgetjson(leaderip, 'volumes/', '--prefix')
+            if volumes_data:
+                # Standardize keys whether etcdgetjson returns a dict or a list of tuples
+                keys = volumes_data.keys() if isinstance(volumes_data, dict) else [item[0] for item in volumes_data]
+                
+                for key in keys:
+                    if 'volumes/CIFS' in key:  # Captures both CIFS and CIFS_adds.lab
+                        cifs_count += 1
+                    elif 'volumes/NFS' in key:
+                        nfs_count += 1
+                    elif 'volumes/ISCSI' in key:
+                        iscsi_count += 1
+        except Exception as e:
+            print(f"Error parsing volumes: {e}")
+
+        # 3. Return the exact JSON structure React expects
+        return jsonify({
+            "users": users_count,
+            "groups": groups_count,
+            "pools": pools_count,
+            "volumes": {
+                "cifs": cifs_count,
+                "nfs": nfs_count,
+                "iscsi": iscsi_count
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
   
 leaderip =0 
 myhost=0
