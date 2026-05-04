@@ -650,11 +650,11 @@ def dgsnewpool(data):
     elif 'raid6plus' in data['redundancy']:
         datastr = 'parity3 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
     elif 'raid10' in data['redundancy']:
-        datastr = 'raid10 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+        datastr = 'raid10 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" nopool "+data['user']+" "+data['owner']
     elif 'raid50' in data['redundancy']:
-        datastr = 'raid50 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+        datastr = 'raid50 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" nopool "+data['user']+" "+data['owner']
     elif 'raid60' in data['redundancy']:
-        datastr = 'raid60 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
+        datastr = 'raid60 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" nopool "+data['user']+" "+data['owner']
     elif 'raid6' in data['redundancy']:
         datastr = 'parity2 '+data['user']+' '+data['owner']+" "+diskstring+" "+cachestring+" "+data['user']+" "+data['owner']
 
