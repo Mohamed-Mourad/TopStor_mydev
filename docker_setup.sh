@@ -524,6 +524,7 @@ docker run -itd --rm --privileged \
 	       shttpdf='/TopStordata/httpd.conf'
 	       docker rm -f httpd 2>/dev/null
 	       docker rm -f flask 2>/dev/null
+	       docker rm -f react-dev-ui 2>/dev/null
 	       rm -rf $httpdf
 	       /TopStor/ioperf.py $etcd $myhost >/dev/null & disown
 
@@ -609,8 +610,10 @@ then
 	sed -i "s/MYCLUSTERH/$myclusterip/g" $shttpdf
 	sed -i "s/MYCLUSTER/$myclusterip/g" $shttpdf
 	echo running httpd fowrarder as I am not primary
-	docker run --rm --name httpd --hostname shttpd --net bridge0 -v /etc/localtime:/etc/localtime:ro -v /root/gitrepo/resolv.conf:/etc/resolv.conf -p $myclusterip:19999:19999 -p $myclusterip:80:80 -p $myclusterip:443:443 -v $shttpdf:/usr/local/apache2/conf/httpd.conf -v /root/topstorwebetc:/usr/local/apache2/topstorwebetc -v /topstorweb:/usr/local/apache2/htdocs/ -itd moataznegm/quickstor:git
+	docker run --rm --name httpd --hostname shttpd --net bridge0 -v /etc/localtime:/etc/localtime:ro -v /root/gitrepo/resolv.conf:/etc/resolv.conf -p $myclusterip:19999:19999 -p $myclusterip:81:81 -p $myclusterip:443:443 -v $shttpdf:/usr/local/apache2/conf/httpd.conf -v /root/topstorwebetc:/usr/local/apache2/topstorwebetc -v /topstorweb:/usr/local/apache2/htdocs/ -itd moataznegm/quickstor:git
 	docker run -itd --rm --name flask --hostname apisrv -v /etc/localtime:/etc/localtime:ro -v /pace/:/pace -v /pacedata/:/pacedata/ -v /root/gitrepo/resolv.conf:/etc/resolv.conf --net bridge0 -p $myclusterip:5001:5001 -v /TopStor/:/TopStor -v /TopStordata/:/TopStordata moataznegm/quickstor:flask3
+	echo running react UI
+	docker run -itd --rm --name react-dev-ui --hostname reactui --net bridge0 -p $myclusterip:5173:5173 -v /topstorweb:/app -v /app/node_modules quickstor-ui:latest
 	/TopStor/promserver.sh $myclusterip 
 fi
 mydns=`/TopStor/etcdget.py $myclusterip dnsname/$myhost`

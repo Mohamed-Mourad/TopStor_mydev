@@ -17,7 +17,7 @@ then
 else
 	etcdip=$myhostip
 fi
-cujobs=(`echo diskreflooper zpooltoimportlooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper volumechecklooper croncalllooper selectimportlooper retryvolumedeletelooper`)
+cujobs=(`echo diskreflooper zpooltoimportlooper iscsiwatchdog zfsping topstorrecvreply receivereplylooper checksyncs syncrequestlooper selectsparelooper volumechecklooper croncalllooper selectimportlooper retryvolumedeletelooper zfstelemetrylooper`)
 declare  -A cmdcjobs
 cmdcjobs['iscsiwatchdog']="/TopStor/iscsiwatchdog.sh" 
 #cmdcjobs['iscsiwatchdoglooper']="/TopStor/iscsiwatchdoglooper.sh" 
@@ -33,6 +33,7 @@ cmdcjobs['croncalllooper']="/pace/croncalllooper.sh"
 cmdcjobs['checksyncs']="echo"
 cmdcjobs['retryvolumedeletelooper']="/pace/retryvolumedeletelooper.sh"
 cmdcjobs['selectimportlooper']="/pace/selectimportlooper.sh"
+cmdcjobs['zfstelemetrylooper']="/pace/zfstelemetrylooper.sh"
 
 while true;
 do
