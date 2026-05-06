@@ -1835,12 +1835,13 @@ def localFileUpdate(data):
         return {"data": 'success'}
     return {"data": uploaded_file.filename}
 
+
 @app.route('/api/v1/telemetry/heartbeat', methods=['POST', 'GET'])
 def telemetry_heartbeat():
     # Write the current epoch time to a file
     try:
         with open('/tmp/ui_active_heartbeat', 'w') as f:
-            f.write(str(int(timestamp())))
+            f.write(str(int(time.time())))
         return {"status": "boost_active"}, 200
     except Exception as e:
         return {"error": str(e)}, 500
@@ -1848,45 +1849,42 @@ def telemetry_heartbeat():
 
 @app.route('/api/v1/info/summary', methods=['GET', 'POST'])
 def get_service_summary():
-    # Since fapi runs on the leader node, etcd is accessible on localhost
-    leaderip = '127.0.0.1' 
-
-    # Helper function to grab the count of keys for a given prefix natively
-    def count_etcd_keys(prefix):
-        try:
-            data = etcdgetjson(leaderip, prefix, '--prefix')
-            return len(data) if data else 0
-        except Exception:
-            return 0
-
+    global leaderip # Use the globally defined leaderip from fapi.py
+    
     try:
-        # 1. Get exact counts using trailing slashes to avoid partial matches
-        users_count = count_etcd_keys('usersinfo/')
-        groups_count = count_etcd_keys('usersigroup/')
-        pools_count = count_etcd_keys('pools/')
+        # 1. Users and Groups (JSON data)
+        # fapi.py native approach: etcdgetjson(leaderip, 'usersinfo', '--prefix')
+        users_data = etcdgetjson(leaderip, 'usersinfo', '--prefix')
+        users_count = len(users_data) if isinstance(users_data, list) else 0
 
-        # 2. Categorize Volumes
+        groups_data = etcdgetjson(leaderip, 'usersigroup', '--prefix')
+        groups_count = len(groups_data) if isinstance(groups_data, list) else 0
+
+        # 2. Pools (Standard data)
+        # fapi.py native approach: get('pools/','--prefix')
+        pools_data = get('pools/', '--prefix')
+        pools_count = len(pools_data) if isinstance(pools_data, list) else 0
+
+        # 3. Categorize Volumes (Standard data)
+        # fapi.py native approach: get('vol', '--prefix')
         cifs_count = 0
         nfs_count = 0
         iscsi_count = 0
 
-        try:
-            volumes_data = etcdgetjson(leaderip, 'volumes/', '--prefix')
-            if volumes_data:
-                # Standardize keys whether etcdgetjson returns a dict or a list of tuples
-                keys = volumes_data.keys() if isinstance(volumes_data, dict) else [item[0] for item in volumes_data]
-                
-                for key in keys:
-                    if 'volumes/CIFS' in key:  # Captures both CIFS and CIFS_adds.lab
+        volumes_data = get('vol', '--prefix')
+        if isinstance(volumes_data, list):
+            for vol in volumes_data:
+                # vol is a tuple e.g., ('vol/NFS/poolname/volname', 'active')
+                if isinstance(vol, (list, tuple)) and len(vol) > 0:
+                    key = str(vol[0]).upper()
+                    if '/CIFS' in key:
                         cifs_count += 1
-                    elif 'volumes/NFS' in key:
+                    elif '/NFS' in key:
                         nfs_count += 1
-                    elif 'volumes/ISCSI' in key:
+                    elif '/ISCSI' in key:
                         iscsi_count += 1
-        except Exception as e:
-            print(f"Error parsing volumes: {e}")
 
-        # 3. Return the exact JSON structure React expects
+        # 4. Return the exact JSON structure React expects
         return jsonify({
             "users": users_count,
             "groups": groups_count,
@@ -1899,8 +1897,8 @@ def get_service_summary():
         }), 200
 
     except Exception as e:
+        print(f"Telemetry Summary Error: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
-
   
 leaderip =0 
 myhost=0

@@ -23,6 +23,7 @@ sed -i 's/SLEEP/sleep 10/g' /TopStordata/discovery.sh
 leaderip=`docker exec etcdclient /TopStor/etcdgetlocal.py leaderip`
 echo starting etcd 
 docker run  --rm --name discovery --hostname discovery -v /etc/localtime:/etc/localtime:ro -v /root/gitrepo/resolv.conf:/etc/resolv.conf -p $etcd:2379:2379 -v /TopStor/:/TopStor -v /root/discovery:/default.etcd -v /TopStordata/discovery.sh:/runme.sh --net bridge0 moataznegm/quickstor:etcd  &
+sleep 3
 docker exec intdns nslookup discovery | grep Address | grep -v 127 | awk '{print $2}'
 newip=`docker exec intdns nslookup discovery | grep Address | grep -v 127 | awk '{print $2}'`
 echo newip=$newip
