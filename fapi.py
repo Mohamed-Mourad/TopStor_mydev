@@ -4,7 +4,7 @@ from getversions import getversions
 from functools import wraps
 from copy import deepcopy
 from flask import request, jsonify, render_template, redirect, url_for, g, send_file
-import re, ipaddress
+import re, ipaddress, traceback
 import Hostsconfig
 from Hostconfig import config
 from allphysicalinfo import getall, initallphy
