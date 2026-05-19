@@ -15,8 +15,12 @@ def get_pool_metrics():
         metrics = [
             "# HELP zfs_pool_read_iops Total read IOPS per pool",
             "# TYPE zfs_pool_read_iops gauge",
+            "# HELP zfs_pool_write_iops Total write IOPS per pool",
+            "# TYPE zfs_pool_write_iops gauge",
             "# HELP zfs_pool_read_latency_ns Read latency in nanoseconds",
-            "# TYPE zfs_pool_read_latency_ns gauge"
+            "# TYPE zfs_pool_read_latency_ns gauge",
+            "# HELP zfs_pool_write_latency_ns Write latency in nanoseconds",
+            "# TYPE zfs_pool_write_latency_ns gauge"
         ]
         
         for line in lines[3:]:
