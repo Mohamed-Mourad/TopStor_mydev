@@ -9,19 +9,18 @@ runningpools='/pacedata/pools/runningpools';
 glog='/var/www/html/des20/Data/TopStor.log';
 txtres='/TopStordata/'`basename $0`'.txt'
 hostname=`hostname -s`
-leader=`./etcdget.py leader --prefix | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
-myip=`./etcdget.py ready/$hostname`
+myip=`echo $@ | awk '{print $1}'`
+leader=`echo $@ | awk '{print $2}'`
 ntp=`ETCDCTL_API=3 ./etcdget.py ntp/$leader`
-./etcdput.py ntp/$hostname $ntp
-#./broadcasttolocal.py ntp/$hostname $ntp
 rm -rf /etc/chrony.conf
 cp /TopStor/chrony.conf /etc/
 echo $ntp | grep '\.'
-if [ $? -ne 0 ];
+if [ $? -eq 0 ];
 then
- ntp='0.pool.ntp.org' 
+ sed -i "s/MASTERSERVER/$ntp/g" /etc/chrony.conf
  ./etcdput.py ntp/$hostname $ntp
-# ./broadcasttolocal.py ntp/$hostname $ntp
+ ./etcdputlocal.py $myhip ntp/$hostname $ntp
+else
+ sed -i '/MASTERSERVER/,+1 d' /etc/chrony.conf
 fi
-sed -i "s/MASTERSERVER/$ntp/g" /etc/chrony.conf
 systemctl restart chronyd

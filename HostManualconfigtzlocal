@@ -2,42 +2,27 @@
 export ETCDCTL_API=3
 cd /TopStor/
 echo $@ > ~/tmp
-perfmon=`cat /pacedata/perfmon`
-echo $perfmon | grep 1
-if [ $? -eq 0 ]; then
- ./logqueue.py HostManaulconfigTZ running system 
-fi
-hostname=`hostname -s`
 dev='enp0s8'
 web='/var/www/html/des20/Data/HostManualconfigstatus.log';
 logging='/var/www/html/des20/Data/currentinfo2.log';
 runningpools='/pacedata/pools/runningpools';
 glog='/var/www/html/des20/Data/TopStor.log';
 txtres='/TopStordata/'`basename $0`'.txt'
-leader=`./etcdget.py leader --prefix | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
-myip=`./etcdget.py ready/$hostname`
-fulltz=`./etcdget.py tz/$leader` 
-./etcdput.py tz/$hostname $fulltz
-#./broadcasttolocal.py tz/$hostname $fulltz
-#echo 'actualfull',$fulltz
-#fulltz='Kirit%(GMT-10!00)_Hawaii'
+hostname=`hostname -s `
+myip=`echo $@ | awk '{print $1}'`
+leader=`echo $@ | awk '{print $2}'`
+fulltz=`ETCDCTL_API=3 ./etcdget.py tz/$leader  `
 tz=`echo $fulltz | awk -F'%' '{print $1}' `
+./etcdputlocal.py $myip tz/$hostname $fulltz 
+./etcdput.py tz/$hostname $fulltz 
 tzone=`timedatectl list-timezones | grep $tz` 
 timedatectl set-timezone $tzone
-ctz=`timedatectl | grep zone | awk -F'zone:' '{print $2}' | awk '{print $1}'`
+ctz=`date +%Z`
 echo ctz=$ctz  tzone=$tzone etcdtz=$tz
 echo $tzone | grep $ctz
 if [ $? -ne 0 ];
 then 
- echo init
- fulltz='Kuw%(GMT+03!00)_Moscow^_St._Petersburg^_Volgograd'
- tz=`echo $fulltz | awk -F'%' '{print $1}' `
- tzone=`timedatectl list-timezones | grep $tz` 
- echo $tz, $tzone
- timedatectl set-timezone $tzone
- 
-fi
-echo $perfmon | grep 1
-if [ $? -eq 0 ]; then
- ./logqueue.py HostManaulconfigTZ stop system 
+ echo I am here
+ tzone='Africa/Cairo'
+ #timedatectl set-timezone $tzone
 fi

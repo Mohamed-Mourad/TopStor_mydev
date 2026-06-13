@@ -10,4 +10,4 @@ glog='/var/www/html/des20/Data/TopStor.log';
 txtres='/TopStordata/'`basename $0`'.txt'
 leader=`./etcdget.py leader --prefix | awk -F'/' '{print $2}' | awk -F"'" '{print $1}'`
 myip=`./etcdget.py ready/$hostname`
-/pace/etcdsync.py $myip alias alias
+./etcdsync.py alias alias 
